@@ -1,45 +1,105 @@
 const mongoose = require("mongoose");
 
 const BookSchema = new mongoose.Schema({
-  name: {
-    type: String,
-    required: [true, "Please enter Book details"],
-    trim: true,
-  },
-  description: {
-    type: String,
-    required: [true, "Please enter Book description"],
-  },
-  price: {
+  book_id: {
     type: Number,
-    required: [true, "Please enter Book price"],
-    maxLength: [8, "Price cannot exceeds 8 characters"],
+    required: [false, "Please enter Book description"],
+  },
+  goodreads_book_id: {
+    type: Number,
+    required: [false, "Please enter Book description"],
+  },
+  best_book_id: {
+    type: Number,
+    required: [false, "Please enter Book description"],
+  },
+  work_id: {
+    type: Number,
+    required: [false, "Please enter Book description"],
+  },
+  books_count: {
+    type: Number,
+    required: [false, "Please enter Book description"],
+  },
+  books_count: {
+    type: Number,
+    required: [false, "Please enter Book description"],
+  },
+  isbn: {
+    type: Number,
+    required: [false, "Please enter Book description"],
+  },
+  authors: {
+    type: String,
+    required: [false, "Please enter Book description"],
+  },
+  original_publication_year: {
+    type: Number,
+    required: [false, "Please enter Book price"],
+  },
+  original_title: {
+    type: String,
+    required: [false, "Please enter Book price"],
+  },
+  title: {
+    type: String,
+    required: [false, "Please enter Book price"],
+  },
+  language_code: {
+    type: String,
+    required: [false, "Please enter Book price"],
+  },
+  average_rating: {
+    type: Number,
+    required: [false, "Please enter Book price"],
+  },
+  ratings_count: {
+    type: Number,
+    required: [false, "Please enter Book price"],
+  },
+  work_ratings_count: {
+    type: Number,
+    required: [false, "Please enter Book price"],
+  },
+  work_text_reviews_count: {
+    type: Number,
+    required: [false, "Please enter Book price"],
+  },
+  ratings_1: {
+    type: Number,
+    required: [false, "Please enter Book price"],
+  },
+  ratings_2: {
+    type: Number,
+    required: [false, "Please enter Book price"],
+  },
+  ratings_3: {
+    type: Number,
+    required: [false, "Please enter Book price"],
+  },
+  ratings_4: {
+    type: Number,
+    required: [false, "Please enter Book price"],
+  },
+  ratings_5: {
+    type: Number,
+    required: [false, "Please enter Book price"],
+  },
+  image_url: {
+    type: String,
+    required: [false, "Please enter Book price"],
+  },
+  small_image_url: {
+    type: String,
+    required: [false, "Please enter Book price"],
   },
   ratings: {
     type: Number,
     default: 0,
   },
-  images: [
-    {
-      public_id: {
-        type: String,
-        required: true,
-      },
-      url: {
-        type: String,
-        required: true,
-      },
-    },
-  ],
   category: {
     type: String,
-    required: [true, "Please enter Book category"],
-  },
-  stock: {
-    type: Number,
-    required: [true, "Please enter Book stock "],
-    maxLength: [4, "Stock cannot exceeds 4 characters"],
-    default: 1,
+    required: [false, "Please enter Book category"],
   },
   numOfReviews: {
     type: Number,

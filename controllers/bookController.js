@@ -5,7 +5,7 @@ const ApiFeatures = require("../utils/apiFeatures");
 // Create Book -> Admin
 exports.createBook = catchAsyncErrors(async (req, res, next) => {
   req.body.user = req.user.id;
-  const Book = await Book.create(req.body);
+  const book = await Book.create(req.body);
 
   res.status(200).json({
     success: true,
@@ -22,17 +22,17 @@ exports.getAllBooks = catchAsyncErrors(async (req, res, next) => {
     .filter()
     .pagination(resultPerPage);
 
-  const Books = await apiFeature.query;
+  const books = await apiFeature.query;
 
   let filteredBooksCount = 5;
 
-  if (!Books) {
+  if (!books) {
     return next(new ErrorHandler("Book not found", 404));
   }
 
   res.status(200).json({
     success: true,
-    Books,
+    books,
     BooksCount,
     resultPerPage,
     filteredBooksCount,
@@ -41,13 +41,13 @@ exports.getAllBooks = catchAsyncErrors(async (req, res, next) => {
 
 // Update Book
 exports.updateBook = catchAsyncErrors(async (req, res, next) => {
-  let Book = await Book.findById(req.params.id);
+  let book = await Book.findById(req.params.id);
 
-  if (!Book) {
+  if (!book) {
     return next(new ErrorHandler("Book not found", 404));
   }
 
-  Book = await Book.findByIdAndUpdate(req.params.id, req.body, {
+  book = await Book.findByIdAndUpdate(req.params.id, req.body, {
     new: true,
     runValidators: true,
     useFindAndModify: false,
@@ -55,19 +55,19 @@ exports.updateBook = catchAsyncErrors(async (req, res, next) => {
 
   res.status(200).json({
     success: true,
-    Book,
+    book,
   });
 });
 
 // Delete Book
 exports.deleteBook = catchAsyncErrors(async (req, res, next) => {
-  const Book = await Book.findById(req.params.id);
+  const book = await Book.findById(req.params.id);
 
-  if (!Book) {
+  if (!book) {
     return next(new ErrorHandler("Book not found", 404));
   }
 
-  await Book.remove();
+  await book.remove();
 
   res.status(200).json({
     success: true,
@@ -77,21 +77,21 @@ exports.deleteBook = catchAsyncErrors(async (req, res, next) => {
 
 // Get Book details
 exports.getBookDetails = catchAsyncErrors(async (req, res, next) => {
-  const Book = await Book.findById(req.params.id);
+  const book = await Book.findById(req.params.id);
 
-  if (!Book) {
+  if (!book) {
     return next(new ErrorHandler("Book not found", 404));
   }
 
   res.status(200).json({
     success: true,
-    Book,
+    book,
   });
 });
 
 // Create Book review or update
 exports.createBookReview = catchAsyncErrors(async (req, res, next) => {
-  const { rating, comment, BookId } = req.body;
+  const { rating, comment, bookId } = req.body;
   const review = {
     user: req.user._id,
     name: req.user.name,
@@ -99,62 +99,63 @@ exports.createBookReview = catchAsyncErrors(async (req, res, next) => {
     comment,
   };
 
-  const Book = await Book.findById(BookId);
+  const book = await Book.findById(bookId);
 
-  const isReviewed = Book.reviews.find(
+  const isReviewed = book.reviews.find(
     (rev) => rev.user.toString() === req.user._id.toString()
   );
+  console.log("inside 107")
   if (isReviewed) {
-    Book.reviews.forEach((rev) => {
+    book.reviews.forEach((rev) => {
       if (rev.user.toString() === req.user._id.toString()) {
         rev.rating = rating;
         rev.comment = comment;
       }
     });
   } else {
-    Book.reviews.push(review);
-    Book.numOfReviews = Book.reviews.length;
+    book.reviews.push(review);
+    book.numOfReviews = book.reviews.length;
   }
 
   let avg = 0;
 
-  Book.reviews.forEach((rev) => {
+  book.reviews.forEach((rev) => {
     avg += rev.rating;
   });
 
-  Book.ratings = avg / Book.reviews.length;
+  book.ratings = avg / book.reviews.length;
 
-  await Book.save({ validateBeforeSave: false });
+  await book.save({ validateBeforeSave: false });
 
   res.status(200).json({
     success: true,
-    Book,
+    book,
   });
 });
 
 // Get all reviews of the Book
 exports.getBookReviews = catchAsyncErrors(async (req, res, next) => {
-  const Book = await Book.findById(req.query.id);
+  const book = await Book.findById(req.query.id);
 
-  if (!Book) {
+  if (!book) {
     return next(new ErrorHandler("Book not found", 404));
   }
 
   res.status(200).json({
     success: true,
-    reviews: Book.reviews,
+    reviews: book.reviews,
   });
 });
 
 // Delete a review
 exports.deleteReview = catchAsyncErrors(async (req, res, next) => {
-  const Book = await Book.findById(req.query.BookId);
+  const book = await Book.findById(req.query.BookId);
 
-  if (!Book) {
+  if (!book) {
     return next(new ErrorHandler("Book not found!", 404));
   }
 
-  const reviews = Book.reviews.filter(
+  const reviews = book.reviews.filter(
     (rev) => rev._id.toString() != req.query.id
   );
 
@@ -184,6 +185,6 @@ exports.deleteReview = catchAsyncErrors(async (req, res, next) => {
 
   res.status(200).json({
     success: true,
-    reviews: Book.reviews,
+    reviews: book.reviews,
   });
 });
