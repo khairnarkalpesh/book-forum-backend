@@ -6,6 +6,7 @@ const cookieParser = require("cookie-parser");
 // Routes import
 const user = require("./routes/userRoute");
 const book = require("./routes/bookRoute");
+const recommendationRoute = require("./routes/recommendationRoute");
 const bodyParser = require("body-parser");
 const fileUpload = require("express-fileupload");
 const cors = require("cors");
@@ -18,6 +19,7 @@ app.use(fileUpload());
 
 app.use("/api/v1", user);
 app.use("/api/v1", book);
+app.use("/api/v1", recommendationRoute);
 
 app.get('/', (req, res) => {
     res.send('Hello World!');

@@ -14,6 +14,9 @@ const {
   getSingleUser,
   updateUserRole,
   deleteUser,
+  addSearch,
+  deleteSearchHistory,
+  deleteSearchRecord
 } = require("../controllers/userController");
 
 router.route("/register").post(registerUser);
@@ -34,4 +37,6 @@ router
   .put(isAuthenticatedUser, authorizeRoles("admin"), updateUserRole)
   .delete(isAuthenticatedUser, authorizeRoles("admin"), deleteUser);
 
+router.route("/user/search").patch(isAuthenticatedUser, addSearch).delete(isAuthenticatedUser, deleteSearchHistory);
+router.delete('/user/search/:id', isAuthenticatedUser, deleteSearchRecord)
 module.exports = router;

@@ -25,6 +25,19 @@ const userSchema = new mongoose.Schema({
     type: Object,
     required: false,
   },
+  searchHistory: [{
+    _id: {
+      type: mongoose.Schema.Types.ObjectId,
+      default: () => mongoose.Types.ObjectId(),
+      unique: true,
+    },
+    text: {
+      type: String,
+      required: [true, "search something"],
+      unique: true,
+      index: true, // add unique index here
+    },
+  }],
   avatar: {
     public_id: {
       type: String,

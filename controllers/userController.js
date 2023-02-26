@@ -14,7 +14,7 @@ exports.registerUser = catchAsyncErrors(async (req, res, next) => {
   //   crop: "scale",
   // });
 
-  const { name, email, password, genres } = req.body; 
+  const { name, email, password, genres } = req.body;
 
   const user = await User.create({
     name,
@@ -187,10 +187,7 @@ exports.updatePassword = catchAsyncErrors(async (req, res, next) => {
 
 // Update user profile
 exports.updateProfile = catchAsyncErrors(async (req, res, next) => {
-  const newUserData = {
-    name: req.body.name,
-    email: req.body.email,
-  };
+  const newUserData = req.body;
 
   const user = await User.findByIdAndUpdate(req.user.id, newUserData, {
     new: true,
@@ -254,3 +251,66 @@ exports.deleteUser = catchAsyncErrors(async (req, res, next) => {
     message: "User deleted!",
   });
 });
+
+
+// Add to search history
+exports.addSearch = catchAsyncErrors(async (req, res, next) => {
+  const { text } = req.body;
+  // const user = await User.findById(req.user.id);
+
+  // if (!user) {
+  //   return next(new ErrorHandler("User not found", 404));
+  // }
+
+  if (!text) {
+    return next(new ErrorHandler("Enter text", 401));
+  }
+
+  const user = await User.findByIdAndUpdate(
+    req.user.id,
+    { $addToSet: { searchHistory: { text } } },
+    { new: true }
+  );
+
+  res.status(200).json({
+    success: true,
+    message: "Search added",
+    searchHistory: user.searchHistory
+  });
+
+})
+
+exports.deleteSearchHistory = catchAsyncErrors(async (req, res, next) => {
+  const user = await User.findById(req.user.id);
+  if (!user) {
+    return res.status(404).send('User not found');
+  }
+
+  user.searchHistory = [];
+  await user.save();
+
+  res.status(200).json({
+    success: true,
+    message: "Search history deleted successfully",
+    searchHistory: req.user.searchHistory
+  });
+})
+
+exports.deleteSearchRecord = catchAsyncErrors( async ( req, res, next) => {
+  const id = req.params.id;
+
+  const user = await User.findByIdAndUpdate(
+    req.user.id,
+    { $pull: { searchHistory: { _id: id } } },
+    { new: true }
+  );
+
+  if (!user) {
+    return res.status(404).json({ error: 'User not found' });
+  }
+
+  res.status(200).json({
+    success: true,
+    message: "Search record deleted",
+  });
+})

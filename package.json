@@ -1,7 +1,5 @@
 {
   "dependencies": {
-    "express": "^4.18.2",
-    "nodemon": "^2.0.20",
     "@fortawesome/fontawesome-svg-core": "^1.2.36",
     "@fortawesome/free-solid-svg-icons": "^5.15.4",
     "@fortawesome/react-fontawesome": "^0.1.15",
@@ -18,11 +16,14 @@
     "cookie-parser": "^1.4.6",
     "core-js": "3",
     "cors": "^2.8.5",
+    "express": "^4.18.2",
     "express-fileupload": "^1.4.0",
     "formik": "^2.2.9",
     "jsonwebtoken": "^8.5.1",
     "mongoose": "^6.7.0",
     "nodemailer": "^6.8.0",
+    "nodemon": "^2.0.20",
+    "python-shell": "^5.0.0",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
     "react-icons": "^4.3.1",
