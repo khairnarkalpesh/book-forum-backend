@@ -10,6 +10,7 @@ const recommendationRoute = require("./routes/recommendationRoute");
 const bodyParser = require("body-parser");
 const fileUpload = require("express-fileupload");
 const cors = require("cors");
+const whishlist = require("./routes/whishlistRoute");
 
 app.use(express.json());
 app.use(cors());
@@ -20,6 +21,7 @@ app.use(fileUpload());
 app.use("/api/v1", user);
 app.use("/api/v1", book);
 app.use("/api/v1", recommendationRoute);
+app.use("/api/v1", whishlist);
 
 app.get('/', (req, res) => {
     res.send('Hello World!');

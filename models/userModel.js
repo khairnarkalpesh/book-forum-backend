@@ -35,7 +35,7 @@ const userSchema = new mongoose.Schema({
       type: String,
       required: [true, "search something"],
       unique: true,
-      index: true, // add unique index here
+      index: true, // add unique index heravatar
     },
   }],
   avatar: {

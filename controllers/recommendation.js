@@ -8,7 +8,7 @@ exports.popularBooks = catchAsyncErrors(async (req, res) => {
     const n = req.query.n || 10; // Number of books to recommend
 
     // Load the saved model from a file
-    const modelPath = "../ml-models/popular_books.pkl";  
+    const modelPath = require("../ml-models/popular_books.pkl");  
     const model = fs.readFileSync(modelPath);
 
     // Call the Python script to get the recommended books
