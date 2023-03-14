@@ -80,7 +80,7 @@ exports.forgotPassword = catchAsyncErrors(async (req, res, next) => {
   const user = await User.findOne({ email: req.body.email });
 
   if (!user) {
-    return next(new ErrorHandler("User not found", 404));
+    return next(new ErrorHandler("User not found", 200));
   }
 
   // Generate OTP
@@ -98,18 +98,18 @@ exports.forgotPassword = catchAsyncErrors(async (req, res, next) => {
   // const data = { name: user.name, otp };
   // const message = template(data);
   const message = `
-Hello, ${user.name}
+  Hello, ${user.name}
 
-Forgot Your Password?
+  Forgot Your Password?
 
-Please use the following One-Time Password (OTP) to reset your password:
+  Please use the following One-Time Password (OTP) to reset your password:
 
-${otp}
+  ${otp}
 
-If you did not request a password reset, please ignore this email.
+  If you did not request a password reset, please ignore this email.
 
-Thanks
-`;
+  Thanks
+  `;
 
   // Send OTP via email or SMS (not shown)
   // const message = `Your password reset OTP is: ${otp}`;
