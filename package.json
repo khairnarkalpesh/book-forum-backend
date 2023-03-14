@@ -19,6 +19,7 @@
     "express": "^4.18.2",
     "express-fileupload": "^1.4.0",
     "formik": "^2.2.9",
+    "handlebars": "^4.7.7",
     "heroku": "^7.68.2",
     "jsonwebtoken": "^8.5.1",
     "mongoose": "^6.7.0",

@@ -18,9 +18,9 @@ exports.getAllBooks = catchAsyncErrors(async (req, res, next) => {
   const resultPerPage = 8;
   const BooksCount = await Book.countDocuments();
   const apiFeature = new ApiFeatures(Book.find(), req.query)
-    .search()
-    .filter()
-    .pagination(resultPerPage);
+    // .search()
+    // .filter()
+    // .pagination();
 
   const books = await apiFeature.query;
 

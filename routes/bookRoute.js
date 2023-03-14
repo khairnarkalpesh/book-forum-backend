@@ -15,7 +15,7 @@ const router = express.Router();
 router.route("/books").get(getAllBooks);
 router
   .route("/admin/book/new")
-  .post(isAuthenticatedUser, authorizeRoles("admin"), createBook);
+  .post(isAuthenticatedUser, createBook);
 router
   .route("/admin/book/:id")
   .put(isAuthenticatedUser, authorizeRoles("admin"), updateBook);

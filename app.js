@@ -5,7 +5,9 @@ const cookieParser = require("cookie-parser");
 
 // Routes import
 const user = require("./routes/userRoute");
+const admin = require("./routes/adminRoute");
 const book = require("./routes/bookRoute");
+const email = require("./routes/email");
 const discussion = require("./routes/discussionRoute");
 const recommendationRoute = require("./routes/recommendationRoute");
 const bodyParser = require("body-parser");
@@ -20,10 +22,12 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(fileUpload());
 
 app.use("/api/v1", user);
+app.use("/api/v1", admin);
 app.use("/api/v1", book);
 app.use("/api/v1", recommendationRoute);
 app.use("/api/v1", whishlist);
 app.use("/api/v1", discussion);
+app.use("/api/v1", email);
 
 app.get('/', (req, res) => {
     res.send('Hello World!');

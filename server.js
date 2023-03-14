@@ -2,7 +2,7 @@ const app = require("./app");
 const dotenv = require("dotenv");
 const connectDatabase = require("./config/database");
 const cloudinary = require("cloudinary");
-
+const mongoose = require("mongoose");
 // Handling uncaught exceptins
 process.on("uncaughtException", (err) => {
   console.log(err.message);
@@ -24,6 +24,8 @@ cloudinary.config({
 const server = app.listen(process.env.PORT, () => {
   console.log("Server is running on port : ", process.env.PORT);
 });
+
+console.log(mongoose.models)
 
 // Unhandled Promise Rejections
 process.on("unhandledRejection", (err) => {

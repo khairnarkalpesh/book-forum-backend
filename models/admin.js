@@ -4,7 +4,7 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
 
-const userSchema = new mongoose.Schema({
+const adminSchema = new mongoose.Schema({
   name: {
     type: String,
     required: [true, "Please enter your name"],
@@ -21,23 +21,6 @@ const userSchema = new mongoose.Schema({
     minLength: [8, "Password should be greater than 8 character"],
     select: false,
   },
-  genres: {
-    type: Object,
-    required: false,
-  },
-  searchHistory: [{
-    _id: {
-      type: mongoose.Schema.Types.ObjectId,
-      default: () => mongoose.Types.ObjectId(),
-      unique: true,
-    },
-    text: {
-      type: String,
-      required: [true, "search something"],
-      unique: true,
-      index: true, // add unique index heravatar
-    },
-  }],
   avatar: {
     public_id: {
       type: String,
@@ -50,13 +33,13 @@ const userSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    default: "user"
+    default: "admin"
   },
   resetPasswordOTP: String,
   resetPasswordOTPExpires: Date,
 });
 
-userSchema.pre("save", async function (next) {
+adminSchema.pre("save", async function (next) {
   if (!this.isModified("password")) {
     next();
   }
@@ -65,23 +48,23 @@ userSchema.pre("save", async function (next) {
 });
 
 // JWT TOKEN
-userSchema.methods.getJWTToken = function () {
+adminSchema.methods.getJWTToken = function () {
   return jwt.sign({ id: this._id }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRES,
   });
 };
 
 // Password compare
-userSchema.methods.comparePassword = async function (enteredPassword) {
+adminSchema.methods.comparePassword = async function (enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
 };
 
 // Generating reset passowrd token
-userSchema.methods.getResetPasswordToken = function () {
+adminSchema.methods.getResetPasswordToken = function () {
   // Generating token
   const resetToken = crypto.randomBytes(20).toString("hex");
 
-  // Hashing and adding resetPassword to userSchema
+  // Hashing and adding resetPassword to adminSchema
   this.resetPasswordToken = crypto
     .createHash("sha256")
     .update(resetToken)
@@ -92,4 +75,6 @@ userSchema.methods.getResetPasswordToken = function () {
   return resetToken;
 };
 
-module.exports = mongoose.model("user", userSchema);
+const Admin = mongoose.model("Admin", adminSchema);
+
+module.exports = Admin;

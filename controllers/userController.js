@@ -5,7 +5,10 @@ const sendToken = require("../utils/jwtToken");
 const sendMail = require("../utils/sendEmail");
 const crypto = require("crypto");
 const cloudinary = require("cloudinary");
-
+const { v4: uuidv4 } = require('uuid');
+const Handlebars = require('handlebars');
+const fs = require('fs');
+const path = require('path');
 // Register a User
 exports.registerUser = catchAsyncErrors(async (req, res, next) => {
   // const myCloud = await cloudinary.v2.uploader.upload(req.body.avatar, {
@@ -80,56 +83,65 @@ exports.forgotPassword = catchAsyncErrors(async (req, res, next) => {
     return next(new ErrorHandler("User not found", 404));
   }
 
-  // Get password token
-  const resetToken = user.getResetPasswordToken();
+  // Generate OTP
+  const uuid = uuidv4();
+  const otp = uuid.replace(/\D/g, '').slice(0, 6); // Generate a 6-digit OTP using UUID v4
 
-  await user.save({ validateBeforeSave: false });
+  // Save OTP and expiration time to user document
+  user.resetPasswordOTP = otp;
+  user.resetPasswordOTPExpires = Date.now() + 10 * 60 * 1000; // OTP will expire in 10 minutes
 
-  // Reset link
-  const resetPasswordUrl = `${req.protocol}://${req.get(
-    "host"
-  )}/api/v1/password/reset/${resetToken}`;
+  await user.save();
 
-  // Reset mail message
-  const message = `Your password reset token is : \n\n ${resetPasswordUrl}`;
+  // const templatePath = path.resolve(__dirname, '..', 'views', 'emails', 'password_reset_template.hbs');
+  // const template = Handlebars.compile(fs.readFileSync(templatePath, 'utf8'));
+  // const data = { name: user.name, otp };
+  // const message = template(data);
+  const message = `
+Hello, ${user.name}
+
+Forgot Your Password?
+
+Please use the following One-Time Password (OTP) to reset your password:
+
+${otp}
+
+If you did not request a password reset, please ignore this email.
+
+Thanks
+`;
+
+  // Send OTP via email or SMS (not shown)
+  // const message = `Your password reset OTP is: ${otp}`;
 
   try {
     await sendMail({
       email: user.email,
-      subject: "eCommerce password recovery",
+      subject: "Resetting you password",
       message,
     });
 
     res.status(200).json({
       success: true,
-      message: `Email sent to ${user.email} successfully...!`,
+      message: `OTP sent to ${user.email} successfully...!`,
     });
   } catch (error) {
-    user.resetPasswordToken = undefined;
-    user.resetPasswordExpire = undefined;
-
-    await user.save({ validateBeforeSave: false });
-
     return next(new ErrorHandler(error.message, 500));
   }
 });
 
-exports.resetPassword = catchAsyncErrors(async (req, res, next) => {
-  // creating token hash
-  const resetPasswordToken = crypto
-    .createHash("sha256")
-    .update(req.params.token)
-    .digest("hex");
 
+exports.resetPassword = catchAsyncErrors(async (req, res, next) => {
   const user = await User.findOne({
-    resetPasswordToken,
-    resetPasswordExpire: { $gt: Date.now() },
+    // email: req.body.email,
+    resetPasswordOTP: req.body.otp,
+    resetPasswordOTPExpires: { $gt: Date.now() },
   });
 
   if (!user) {
     return next(
       new ErrorHandler(
-        "Reset password token is invalid or has been expired",
+        "Invalid OTP or OTP has expired",
         404
       )
     );
@@ -139,15 +151,19 @@ exports.resetPassword = catchAsyncErrors(async (req, res, next) => {
     return next(new ErrorHandler("Password not matched", 404));
   }
 
+  // Reset password
   user.password = req.body.password;
 
-  user.resetPasswordToken = undefined;
-  user.resetPasswordExpire = undefined;
+  // Clear OTP fields
+  user.resetPasswordOTP = undefined;
+  user.resetPasswordOTPExpires = undefined;
 
   await user.save();
 
+  // Return success message and token (if needed)
   sendToken(user, 200, res);
 });
+
 
 // Get user details
 exports.getUserDetails = catchAsyncErrors(async (req, res, next) => {
@@ -199,58 +215,58 @@ exports.updateProfile = catchAsyncErrors(async (req, res, next) => {
 });
 
 // Get all users (admin)
-exports.getAllUsers = catchAsyncErrors(async (req, res, next) => {
-  const allUsers = await User.find();
+// exports.getAllUsers = catchAsyncErrors(async (req, res, next) => {
+//   const allUsers = await User.find();
 
-  res.status(200).json(allUsers);
-});
+//   res.status(200).json(allUsers);
+// });
 
 // Get users (admin)
-exports.getSingleUser = catchAsyncErrors(async (req, res, next) => {
-  const user = await User.findById(req.params.id);
+// exports.getSingleUser = catchAsyncErrors(async (req, res, next) => {
+//   const user = await User.findById(req.params.id);
 
-  if (!user) {
-    return next(new ErrorHandler("User Not Found!", 404));
-  }
+//   if (!user) {
+//     return next(new ErrorHandler("User Not Found!", 404));
+//   }
 
-  res.status(200).json(user);
-});
+//   res.status(200).json(user);
+// });
 
 // Update user role -> Admin
-exports.updateUserRole = catchAsyncErrors(async (req, res, next) => {
-  const newUserData = {
-    name: req.body.name,
-    email: req.body.email,
-    role: req.body.role,
-  };
+// exports.updateUserRole = catchAsyncErrors(async (req, res, next) => {
+//   const newUserData = {
+//     name: req.body.name,
+//     email: req.body.email,
+//     role: req.body.role,
+//   };
 
-  const user = await User.findByIdAndUpdate(req.user.id, newUserData, {
-    new: true,
-    runValidators: true,
-    useFindAndModify: false,
-  });
+//   const user = await User.findByIdAndUpdate(req.user.id, newUserData, {
+//     new: true,
+//     runValidators: true,
+//     useFindAndModify: false,
+//   });
 
-  res.status(200).json({
-    success: true,
-    user,
-  });
-});
+//   res.status(200).json({
+//     success: true,
+//     user,
+//   });
+// });
 
 // Delete user -> Admin
-exports.deleteUser = catchAsyncErrors(async (req, res, next) => {
-  const user = await User.findById(req.params.id);
+// exports.deleteUser = catchAsyncErrors(async (req, res, next) => {
+//   const user = await User.findById(req.params.id);
 
-  if (!user) {
-    return next(new ErrorHandler("User not found", 404));
-  }
+//   if (!user) {
+//     return next(new ErrorHandler("User not found", 404));
+//   }
 
-  await user.remove();
+//   await user.remove();
 
-  res.status(200).json({
-    success: true,
-    message: "User deleted!",
-  });
-});
+//   res.status(200).json({
+//     success: true,
+//     message: "User deleted!",
+//   });
+// });
 
 
 // Add to search history
@@ -296,7 +312,7 @@ exports.deleteSearchHistory = catchAsyncErrors(async (req, res, next) => {
   });
 })
 
-exports.deleteSearchRecord = catchAsyncErrors( async ( req, res, next) => {
+exports.deleteSearchRecord = catchAsyncErrors(async (req, res, next) => {
   const id = req.params.id;
 
   const user = await User.findByIdAndUpdate(
