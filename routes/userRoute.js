@@ -16,12 +16,14 @@ const {
   deleteUser,
   addSearch,
   deleteSearchHistory,
-  deleteSearchRecord
+  deleteSearchRecord,
+  verifyOTP
 } = require("../controllers/userController");
 
 router.route("/register").post(registerUser);
 router.route("/login").post(loginUser);
 router.route("/password/forgot").post(forgotPassword);
+router.route("/verifyOTP").post(verifyOTP);
 router.route("/password/reset").put(resetPassword);
 router.route("/logout").get(logout);
 router.route("/me").get(isAuthenticatedUser, getUserDetails);

@@ -131,12 +131,32 @@ exports.forgotPassword = catchAsyncErrors(async (req, res, next) => {
 });
 
 
-exports.resetPassword = catchAsyncErrors(async (req, res, next) => {
+exports.verifyOTP = catchAsyncErrors(async (req, res, next) => {
   const user = await User.findOne({
     // email: req.body.email,
     resetPasswordOTP: req.body.otp,
     resetPasswordOTPExpires: { $gt: Date.now() },
   });
+
+  if (!user) {
+    return next(
+      new ErrorHandler(
+        "Invalid OTP or OTP has expired",
+        404
+      )
+    );
+  }
+
+  res.status(200).json({
+    success: true,
+    message: "OTP Verified",
+  });
+
+
+});
+
+exports.resetPassword = catchAsyncErrors(async (req, res, next) => {
+  const user = await User.findOne({ email: req.body.email });
 
   if (!user) {
     return next(
