@@ -143,7 +143,7 @@ exports.verifyOTP = catchAsyncErrors(async (req, res, next) => {
     return next(
       new ErrorHandler(
         "Invalid OTP or OTP has expired",
-        404
+        201
       )
     );
   }
