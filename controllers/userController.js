@@ -134,6 +134,7 @@ exports.forgotPassword = catchAsyncErrors(async (req, res, next) => {
 exports.verifyOTP = catchAsyncErrors(async (req, res, next) => {
   const user = await User.findOne({
     // email: req.body.email,
+    email:req.body.email,
     resetPasswordOTP: req.body.otp,
     resetPasswordOTPExpires: { $gt: Date.now() },
   });
