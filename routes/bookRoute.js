@@ -8,6 +8,9 @@ const {
   createBookReview,
   getBookReviews,
   deleteReview,
+  bookInteraction,
+  getInteractions,
+  getPopularBooks
 } = require("../controllers/bookController");
 const { isAuthenticatedUser, authorizeRoles } = require("../middleware/auth");
 const router = express.Router();
@@ -28,5 +31,8 @@ router
   .route("/reviews")
   .get(getBookReviews)
   .delete(isAuthenticatedUser, deleteReview);
+
+router.route('/book-interactions').put(isAuthenticatedUser, bookInteraction).get(isAuthenticatedUser, getInteractions)
+router.route('/popular-books').get(isAuthenticatedUser, getPopularBooks)
 
 module.exports = router;

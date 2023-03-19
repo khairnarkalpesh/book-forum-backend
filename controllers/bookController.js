@@ -1,7 +1,9 @@
-const Book = require("../models/bookModel");
+const { Book, BookInteraction } = require("../models/bookModel");
 const ErrorHandler = require("../utils/errorhandler");
 const catchAsyncErrors = require("../middleware/catchAsyncErrors");
 const ApiFeatures = require("../utils/apiFeatures");
+const moment = require('moment');
+const _ = require('lodash');
 // Create Book -> Admin
 exports.createBook = catchAsyncErrors(async (req, res, next) => {
   req.body.user = req.user.id;
@@ -9,7 +11,7 @@ exports.createBook = catchAsyncErrors(async (req, res, next) => {
 
   res.status(200).json({
     success: true,
-    Book,
+    book,
   });
 });
 
@@ -18,9 +20,9 @@ exports.getAllBooks = catchAsyncErrors(async (req, res, next) => {
   const resultPerPage = 8;
   const BooksCount = await Book.countDocuments();
   const apiFeature = new ApiFeatures(Book.find(), req.query)
-    // .search()
-    // .filter()
-    // .pagination();
+  // .search()
+  // .filter()
+  // .pagination();
 
   const books = await apiFeature.query;
 
@@ -188,3 +190,111 @@ exports.deleteReview = catchAsyncErrors(async (req, res, next) => {
     reviews: book.reviews,
   });
 });
+
+
+// Book Interaction APIs
+exports.bookInteraction = catchAsyncErrors(async (req, res) => {
+  const { user_id, book_id, rating, is_read, is_reviewed, genre } = req.body;
+
+  console.log(req.body)
+
+  // Find the existing book interaction or create a new one
+  let bookInteraction = await BookInteraction.findOne({ user_id, book_id });
+  if (!bookInteraction) {
+    bookInteraction = new BookInteraction({ user_id, book_id });
+  }
+
+  // Update the fields
+  if (is_reviewed) {
+    bookInteraction.rating = rating;
+    bookInteraction.is_reviewed = true;
+  } if (is_read) {
+    bookInteraction.is_read = true;
+  }
+  if (rating) {
+    bookInteraction.rating = rating;
+  }
+  if (genre) {
+    bookInteraction.genre = genre;
+  }
+
+  // Save the updated book interaction
+  await bookInteraction.save();
+
+  res.status(200).json({
+    success: true,
+    bookInteraction,
+  });
+
+});
+
+// Get all interactions
+exports.getInteractions = catchAsyncErrors(async (req, res, next) => {
+  const interactions = await BookInteraction.find();
+  res.status(200).json({
+    success: true,
+    interactions,
+  });
+})
+
+// Get pupular
+exports.getPopularBooks = catchAsyncErrors(async (req, res, next) => {
+  const { genre } = req.body;
+
+  const popularity_score = await BookInteraction.aggregate([
+    {
+      $group: {
+        _id: "$book_id",
+        is_read: { $sum: "$is_read" },
+        rating: { $avg: "$rating" },
+        likedPercent: { $avg: "$likedPercent" },
+        numRatings: { $avg: "$numRatings" },
+        ...({ genre: { $first: "$genre" } })
+
+      }
+    },
+    {
+      $match: {
+        is_read: { $ne: 0 },
+        ...({ genre: { $eq: genre } })
+      }
+    },
+    {
+      $sort: {
+        popularity: -1
+      }
+    },
+    {
+      $project: {
+        _id: 1,
+        book_id: "$_id",
+        popularity: {
+          $sum: [
+            { $cond: { if: { $ne: ["$is_read", 0] }, then: { $divide: ["$is_read", { $sum: "$is_read" }] }, else: 0 } },
+            "$rating",
+            "$likedPercent",
+            "$numRatings"
+          ]
+        }
+      }
+    },
+    {
+      $sort: {
+        popularity: -1
+      }
+    },
+    {
+      $limit: 5
+    }
+  ]);
+
+  console.log(popularity_score)
+
+  const popular_books = await Book.find({ book_id: { $in: popularity_score.map(score => score.book_id) } }).sort({ popularity: -1 });
+
+  res.status(200).json({
+    success: true,
+    total: popular_books.length,
+    popular_books,
+  });
+})
