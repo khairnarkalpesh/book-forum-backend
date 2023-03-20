@@ -154,34 +154,139 @@ const bookInteractionSchema = new mongoose.Schema({
   }
 });
 
+// const bookSchema = new mongoose.Schema({
+//   book_id: {
+//     type: Number,
+//     required: true,
+//   },
+//   title: {
+//     type: String,
+//     required: true,
+//   },
+//   author: {
+//     type: String,
+//     required: true,
+//   },
+//   genre: {
+//     type: String,
+//   },
+//   rating: {
+//     type: Number,
+//     required: true,
+//   },
+//   likedPercent: {
+//     type: Number,
+//     required: true,
+//   },
+//   numRatings: {
+//     type: Number,
+//     required: true,
+//   },
+// });
+
 const bookSchema = new mongoose.Schema({
   book_id: {
-    type: Number,
-    required: true,
+    type: String,
+    required: false
+  },
+  bookId: {
+    type: String,
+    required: false
   },
   title: {
     type: String,
-    required: true,
+    required: false
+  },
+  series: {
+    type: String,
+    required: false
   },
   author: {
     type: String,
-    required: true,
-  },
-  genre: {
-    type: String,
+    required: false
   },
   rating: {
-    type: Number,
-    required: true,
+    type: String,
+    required: false
   },
-  likedPercent: {
-    type: Number,
-    required: true,
+  description: {
+    type: String,
+    required: false
   },
-  numRatings: {
-    type: Number,
-    required: true,
+  language: {
+    type: String,
+    required: false
   },
+  isbn: {
+    type: String,
+    required: false
+  },
+  genres: {
+    type: [String],
+    required: false
+  },
+  genre1: {
+    type: String,
+    required: false
+  },
+  genre2: {
+    type: String,
+    required: false
+  },
+  genre3: {
+    type: String,
+    required: false
+  },
+  genre4: {
+    type: String,
+    required: false
+  },
+  genre5: {
+    type: String,
+    required: false
+  },
+  genre6: {
+    type: String,
+    required: false
+  },
+  genre7: {
+    type: String,
+    required: false
+  },
+  genre8: {
+    type: String,
+    required: false
+  },
+  genre9: {
+    type: String,
+    required: false
+  },
+  characters: {
+    type: [String],
+    required: false
+  },
+  edition: {
+    type: String,
+    required: false
+  },
+  pages: {
+    type: Number,
+    required: false
+  },
+  publisher: {
+    type: String,
+    required: false
+  },
+  awards: {
+    type: [String],
+    required: false
+  },
+  numRatings: String,
+  likedPercent: String,
+  coverImg: String,
+  bbeScore: String,
+  bbeVotes: String,
+  
 });
 
 const Book = mongoose.model('Book', bookSchema);

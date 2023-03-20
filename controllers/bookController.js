@@ -249,14 +249,14 @@ exports.getPopularBooks = catchAsyncErrors(async (req, res, next) => {
         rating: { $avg: "$rating" },
         likedPercent: { $avg: "$likedPercent" },
         numRatings: { $avg: "$numRatings" },
-        ...({ genre: { $first: "$genre" } })
+        // ...({ genre: { $first: "$genre" } })
 
       }
     },
     {
       $match: {
         is_read: { $ne: 0 },
-        ...({ genre: { $eq: genre } })
+        // ...({ genre: { $eq: genre } })
       }
     },
     {
@@ -284,7 +284,7 @@ exports.getPopularBooks = catchAsyncErrors(async (req, res, next) => {
       }
     },
     {
-      $limit: 5
+      $limit: 10
     }
   ]);
 
