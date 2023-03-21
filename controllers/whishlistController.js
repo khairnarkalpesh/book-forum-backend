@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const Wishlist = require("../models/whishlistModel");
-const Book = require("../models/bookModel");
+const {Book} = require("../models/bookModel");
 const catchAsyncErrors = require("../middleware/catchAsyncErrors");
 
 exports.addWhishlist = catchAsyncErrors(async (req, res, next) => {
