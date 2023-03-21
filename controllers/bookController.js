@@ -309,6 +309,8 @@ exports.getPopularBooks = catchAsyncErrors(async (req, res, next) => {
     matchStage.$match.$and.push({ genres: { $in: [genre] } });
   }
 
+  console.log("matchStage", genre)
+
   const popular_books = await Book.aggregate([
     matchStage,
     {
@@ -378,7 +380,7 @@ exports.getPopularBooks = catchAsyncErrors(async (req, res, next) => {
     }
   ])
 
-  console.log(popular_books)
+  // console.log(popular_books)
 
 
   res.status(200).json({
