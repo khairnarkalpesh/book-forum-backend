@@ -310,6 +310,7 @@ exports.getPopularBooks = catchAsyncErrors(async (req, res, next) => {
   }
 
   console.log("matchStage", genre)
+  console.log("req.body", req.body)
 
   const popular_books = await Book.aggregate([
     matchStage,
