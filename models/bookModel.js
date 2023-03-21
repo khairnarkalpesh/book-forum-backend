@@ -127,32 +127,7 @@
 //   BookInteraction
 // };
 
-const mongoose = require('mongoose');
 
-const bookInteractionSchema = new mongoose.Schema({
-  user_id: { type: String, required: true },
-  book_id: { type: String, required: true },
-  is_read: {
-    type: Number,
-    default: 0
-  },
-  rating: {
-    type: Number,
-    min: 1,
-    max: 5
-  },
-  is_reviewed: {
-    type: Number,
-    default: 0
-  },
-  genre: {
-    type: String,
-  },
-  last_interaction_date: {
-    type: Date,
-    default: Date.now
-  }
-});
 
 // const bookSchema = new mongoose.Schema({
 //   book_id: {
@@ -184,12 +159,35 @@ const bookInteractionSchema = new mongoose.Schema({
 //   },
 // });
 
+const mongoose = require('mongoose');
+
+const bookInteractionSchema = new mongoose.Schema({
+  user_id: { type: String, required: true },
+  book_id: { type: String, required: true },
+  is_read: {
+    type: Number,
+    default: 0
+  },
+  rating: {
+    type: Number,
+    min: 1,
+    max: 5
+  },
+  is_reviewed: {
+    type: Number,
+    default: 0
+  },
+  genre: {
+    type: String,
+  },
+  last_interaction_date: {
+    type: Date,
+    default: Date.now
+  }
+});
+
 const bookSchema = new mongoose.Schema({
   book_id: {
-    type: String,
-    required: false
-  },
-  bookId: {
     type: String,
     required: false
   },
@@ -277,16 +275,91 @@ const bookSchema = new mongoose.Schema({
     type: String,
     required: false
   },
+  coverImg: {
+    type: String,
+    required: false
+  },
+  pdfUrl: {
+    type: String,
+    required: false
+  },
   awards: {
     type: [String],
     required: false
   },
-  numRatings: String,
-  likedPercent: String,
-  coverImg: String,
-  bbeScore: String,
-  bbeVotes: String,
-  
+  numRatings: {
+    type: Number,
+    default: 0,
+  },
+  readCount: {
+    type: Number,
+    default: function () {
+      return Math.floor(Math.random() * (50000 - 50 + 1)) + 50;
+    }
+  },
+  likedPercent: {
+    type: Number,
+    default: 0,
+  },
+  bbeScore: {
+    type: Number,
+    default: 0,
+  },
+  bbeVotes: {
+    type: Number,
+    default: 0,
+  },
+  numOfReviews: {
+    type: Number,
+    default: 0,
+  },
+  reviews: [
+    {
+      user: {
+        type: mongoose.Schema.ObjectId,
+        ref: "User",
+        required: true,
+      },
+      name: {
+        type: String,
+        required: true,
+      },
+      rating: {
+        type: Number,
+        required: true,
+      },
+      comment: {
+        type: String,
+        required: true,
+      },
+      profileImage: {
+        type: String,
+        required: false
+      }
+    },
+  ],
+  user: {
+    user_id: {
+      type: mongoose.Schema.ObjectId,
+      ref: "User",
+      required: true,
+      default: "641932c17069706a785ef4d3"
+    },
+    name: {
+      type: String,
+      required: true,
+      default: "Author"
+    },
+    profileImage: {
+      type: String,
+      required: false,
+      default: "https://i.pravatar.cc/150?img=3"
+    }
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now,
+  },
 });
 
 const Book = mongoose.model('Book', bookSchema);

@@ -33,6 +33,6 @@ router
   .delete(isAuthenticatedUser, deleteReview);
 
 router.route('/book-interactions').put(isAuthenticatedUser, bookInteraction).get(isAuthenticatedUser, getInteractions)
-router.route('/popular-books').get( getPopularBooks)
+router.route('/popular-books').get(isAuthenticatedUser, getPopularBooks)
 
 module.exports = router;

@@ -6,12 +6,16 @@ const moment = require('moment');
 const _ = require('lodash');
 // Create Book -> Admin
 exports.createBook = catchAsyncErrors(async (req, res, next) => {
-  req.body.user = req.user.id;
-  const book = await Book.create(req.body);
+  // req.body.user = {
+  //   user_id: req.user.id,
+  //   name: req.user.name,
+  //   ...(req.user.avatar && { profileImage: req.user.avatar.url })
+  // };
+
+  await Book.insertMany(req.body);
 
   res.status(200).json({
     success: true,
-    book,
   });
 });
 
@@ -106,7 +110,6 @@ exports.createBookReview = catchAsyncErrors(async (req, res, next) => {
   const isReviewed = book.reviews.find(
     (rev) => rev.user.toString() === req.user._id.toString()
   );
-  console.log("inside 107")
   if (isReviewed) {
     book.reviews.forEach((rev) => {
       if (rev.user.toString() === req.user._id.toString()) {
@@ -125,7 +128,7 @@ exports.createBookReview = catchAsyncErrors(async (req, res, next) => {
     avg += rev.rating;
   });
 
-  book.ratings = avg / book.reviews.length;
+  book.rating = avg / book.reviews.length;
 
   await book.save({ validateBeforeSave: false });
 
@@ -241,56 +244,142 @@ exports.getInteractions = catchAsyncErrors(async (req, res, next) => {
 exports.getPopularBooks = catchAsyncErrors(async (req, res, next) => {
   const { genre } = req.body;
 
-  const popularity_score = await BookInteraction.aggregate([
-    {
-      $group: {
-        _id: "$book_id",
-        is_read: { $sum: "$is_read" },
-        rating: { $avg: "$rating" },
-        likedPercent: { $avg: "$likedPercent" },
-        numRatings: { $avg: "$numRatings" },
-        // ...({ genre: { $first: "$genre" } })
+  // const popularity_score = await BookInteraction.aggregate([
+  //   {
+  //     $group: {
+  //       _id: "$book_id",
+  //       is_read: { $sum: "$is_read" },
+  //       rating: { $avg: "$rating" },
+  //       likedPercent: { $avg: "$likedPercent" },
+  //       numRatings: { $avg: "$numRatings" },
+  //       // ...({ genre: { $first: "$genre" } })
 
-      }
-    },
+  //     }
+  //   },
+  //   {
+  //     $match: {
+  //       is_read: { $ne: 0 },
+  //       // ...({ genre: { $eq: genre } })
+  //     }
+  //   },
+  //   {
+  //     $sort: {
+  //       popularity: -1
+  //     }
+  //   },
+  //   {
+  //     $project: {
+  //       _id: 1,
+  //       book_id: "$_id",
+  //       popularity: {
+  //         $sum: [
+  //           { $cond: { if: { $ne: ["$is_read", 0] }, then: { $divide: ["$is_read", { $sum: "$is_read" }] }, else: 0 } },
+  //           "$rating",
+  //           "$likedPercent",
+  //           "$numRatings"
+  //         ]
+  //       }
+  //     }
+  //   },
+  //   {
+  //     $sort: {
+  //       popularity: -1
+  //     }
+  //   },
+  //   {
+  //     $limit: 10
+  //   }
+  // ]);
+
+  // console.log(popularity_score)
+
+  // const popular_books = await Book.find({ book_id: { $in: popularity_score.map(score => score.book_id) } }).sort({ popularity: -1 });
+
+  const matchStage = {
+    $match: {
+      $and: [
+        { numRatings: { $ne: null } },
+        { readCount: { $ne: null } },
+        { likedPercent: { $ne: null } },
+      ]
+    }
+  };
+
+  if (genre) {
+    matchStage.$match.$and.push({ genres: { $in: [genre] } });
+  }
+
+  const popular_books = await Book.aggregate([
+    matchStage,
     {
-      $match: {
-        is_read: { $ne: 0 },
-        // ...({ genre: { $eq: genre } })
-      }
-    },
-    {
-      $sort: {
-        popularity: -1
-      }
-    },
-    {
-      $project: {
-        _id: 1,
-        book_id: "$_id",
-        popularity: {
+      $addFields: {
+        popularityScore: {
           $sum: [
-            { $cond: { if: { $ne: ["$is_read", 0] }, then: { $divide: ["$is_read", { $sum: "$is_read" }] }, else: 0 } },
-            "$rating",
-            "$likedPercent",
-            "$numRatings"
+            {
+              $cond: [
+                {
+                  $eq: ["$numRatings", 0]
+                },
+                0,
+                {
+                  $multiply: [
+                    0.4,
+                    {
+                      $divide: ["$numRatings", { $add: ["$numRatings", "$numOfReviews"] }]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              $multiply: [0.2, "$likedPercent"]
+            },
+            {
+              $cond: [
+                {
+                  $eq: ["$readCount", 0]
+                },
+                0,
+                {
+                  $multiply: [
+                    0.2,
+                    {
+                      $divide: ["$readCount", { $add: ["$readCount", "$numOfReviews"] }]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              $cond: [
+                {
+                  $eq: ["$numOfReviews", 0]
+                },
+                0,
+                {
+                  $multiply: [
+                    0.2,
+                    {
+                      $divide: ["$numOfReviews", { $add: ["$numRatings", "$numOfReviews"] }]
+                    }
+                  ]
+                }
+              ]
+            }
           ]
         }
       }
     },
     {
-      $sort: {
-        popularity: -1
-      }
+      $sort: { popularityScore: -1 }
     },
     {
-      $limit: 10
+      $limit: 50
     }
-  ]);
+  ])
 
-  console.log(popularity_score)
+  console.log(popular_books)
 
-  const popular_books = await Book.find({ book_id: { $in: popularity_score.map(score => score.book_id) } }).sort({ popularity: -1 });
 
   res.status(200).json({
     success: true,
