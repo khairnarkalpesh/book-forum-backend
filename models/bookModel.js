@@ -343,17 +343,14 @@ const bookSchema = new mongoose.Schema({
       type: mongoose.Schema.ObjectId,
       ref: "User",
       required: true,
-      default: "641932c17069706a785ef4d3"
     },
     name: {
       type: String,
       required: true,
-      default: "Author"
     },
     profileImage: {
       type: String,
       required: false,
-      default: "https://i.pravatar.cc/150?img=3"
     }
   },
   createdAt: {

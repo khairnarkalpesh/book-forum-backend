@@ -6,16 +6,17 @@ const moment = require('moment');
 const _ = require('lodash');
 // Create Book -> Admin
 exports.createBook = catchAsyncErrors(async (req, res, next) => {
-  // req.body.user = {
-  //   user_id: req.user.id,
-  //   name: req.user.name,
-  //   ...(req.user.avatar && { profileImage: req.user.avatar.url })
-  // };
+  req.body.user = {
+    user_id: req.user.id,
+    name: req.user.name,
+    ...(req.user.avatar && { profileImage: req.user.avatar.url })
+  };
 
-  await Book.insertMany(req.body);
+  const book = await Book.create(req.body);
 
   res.status(200).json({
     success: true,
+    book
   });
 });
 
@@ -388,5 +389,65 @@ exports.getPopularBooks = catchAsyncErrors(async (req, res, next) => {
     success: true,
     total: popular_books.length,
     popular_books,
+  });
+})
+
+exports.getTrendingBooks = catchAsyncErrors(async (req, res, next) => {
+  const { genre } = req.body;
+  const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+  const matchStage = {
+    $match: {
+      $and: [
+        { numRatings: { $ne: null } },
+        { readCount: { $ne: null } },
+        { likedPercent: { $ne: null } },
+        { createdAt: { $gte: weekAgo } }
+      ]
+    }
+  };
+
+  if (genre) {
+    matchStage.$match.$and.push({ genres: { $in: [genre] } });
+  }
+  const trendingBooks = await Book.aggregate([
+    matchStage,
+    {
+      $project: {
+        book_id: 1,
+        title: 1,
+        rating: 1,
+        genres: 1,
+        numRatings: 1,
+        readCount: 1,
+        likedPercent: 1,
+        numOfReviews: 1,
+        reviews: 1,
+        createdAt: 1,
+        trendingScore: {
+          //   $add: [
+          //     { $multiply: ['$likedPercent', 0.4] },
+          //     { $multiply: ['$numOfReviews', 0.3] },
+          //     { $multiply: ['$readCount', 0.2] },
+          //     { $multiply: ['$rating', 0.1] },
+          //   ],
+          $multiply: [
+            { $cond: [{ $ne: ["$rating", 0] }, { $toDouble: "$rating" }, 1] },
+            { $cond: [{ $ne: ["$numOfReviews", 0] }, { $divide: ["$numOfReviews", "$readCount"] }, 1] },
+            { $cond: [{ $ne: ["$likedPercent", 0] }, { $divide: ["$likedPercent", 100] }, 1] }
+          ]
+        },
+      },
+    },
+    {
+      $sort: { createdAt: -1, trendingScore: -1 },
+    },
+    {
+      $limit: 10,
+    },
+  ]);
+  res.status(200).json({
+    success: true,
+    total: trendingBooks.length,
+    trendingBooks,
   });
 })
