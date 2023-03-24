@@ -416,18 +416,8 @@ exports.getTrendingBooks = catchAsyncErrors(async (req, res, next) => {
   const trendingBooks = await Book.aggregate([
     matchStage,
     {
-      $project: {
-        // book_id: 1,
-        // title: 1,
-        // rating: 1,
-        // genres: 1,
-        // numRatings: 1,
-        // readCount: 1,
-        // likedPercent: 1,
-        // numOfReviews: 1,
-        // reviews: 1,
-        // createdAt: 1,
-        // trendingScore: {
+      $addFields: {
+        trendingScore: {
           //   $add: [
           //     { $multiply: ['$likedPercent', 0.4] },
           //     { $multiply: ['$numOfReviews', 0.3] },
