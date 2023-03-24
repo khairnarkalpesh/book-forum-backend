@@ -243,58 +243,105 @@ exports.getInteractions = catchAsyncErrors(async (req, res, next) => {
 
 // Get pupular
 exports.getPopularBooks = catchAsyncErrors(async (req, res, next) => {
-  const { genre } = req.body;
 
-  // const popularity_score = await BookInteraction.aggregate([
-  //   {
-  //     $group: {
-  //       _id: "$book_id",
-  //       is_read: { $sum: "$is_read" },
-  //       rating: { $avg: "$rating" },
-  //       likedPercent: { $avg: "$likedPercent" },
-  //       numRatings: { $avg: "$numRatings" },
-  //       // ...({ genre: { $first: "$genre" } })
+  const matchStage = {
+    $match: {
+      $and: [
+        { numRatings: { $ne: null } },
+        { readCount: { $ne: null } },
+        { likedPercent: { $ne: null } },
+      ]
+    }
+  };
 
-  //     }
-  //   },
-  //   {
-  //     $match: {
-  //       is_read: { $ne: 0 },
-  //       // ...({ genre: { $eq: genre } })
-  //     }
-  //   },
-  //   {
-  //     $sort: {
-  //       popularity: -1
-  //     }
-  //   },
-  //   {
-  //     $project: {
-  //       _id: 1,
-  //       book_id: "$_id",
-  //       popularity: {
-  //         $sum: [
-  //           { $cond: { if: { $ne: ["$is_read", 0] }, then: { $divide: ["$is_read", { $sum: "$is_read" }] }, else: 0 } },
-  //           "$rating",
-  //           "$likedPercent",
-  //           "$numRatings"
-  //         ]
-  //       }
-  //     }
-  //   },
-  //   {
-  //     $sort: {
-  //       popularity: -1
-  //     }
-  //   },
-  //   {
-  //     $limit: 10
-  //   }
-  // ]);
+  if (genre) {
+    matchStage.$match.$and.push({ genres: { $in: [genre] } });
+  }
 
-  // console.log(popularity_score)
+  console.log("matchStage", genre)
+  console.log("req.header", req.header)
 
-  // const popular_books = await Book.find({ book_id: { $in: popularity_score.map(score => score.book_id) } }).sort({ popularity: -1 });
+  const popular_books = await Book.aggregate([
+    matchStage,
+    {
+      $addFields: {
+        popularityScore: {
+          $sum: [
+            {
+              $cond: [
+                {
+                  $eq: ["$numRatings", 0]
+                },
+                0,
+                {
+                  $multiply: [
+                    0.4,
+                    {
+                      $divide: ["$numRatings", { $add: ["$numRatings", "$numOfReviews"] }]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              $multiply: [0.2, "$likedPercent"]
+            },
+            {
+              $cond: [
+                {
+                  $eq: ["$readCount", 0]
+                },
+                0,
+                {
+                  $multiply: [
+                    0.2,
+                    {
+                      $divide: ["$readCount", { $add: ["$readCount", "$numOfReviews"] }]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              $cond: [
+                {
+                  $eq: ["$numOfReviews", 0]
+                },
+                0,
+                {
+                  $multiply: [
+                    0.2,
+                    {
+                      $divide: ["$numOfReviews", { $add: ["$numRatings", "$numOfReviews"] }]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      $sort: { popularityScore: -1 }
+    },
+    {
+      $limit: 50
+    }
+  ])
+
+  // console.log(popular_books)
+
+
+  res.status(200).json({
+    success: true,
+    total: popular_books.length,
+    popular_books,
+  });
+})
+
+exports.getPopularBooksByGenre = catchAsyncErrors(async (req, res, next) => {
+  const genre = req.params.genre;
 
   const matchStage = {
     $match: {

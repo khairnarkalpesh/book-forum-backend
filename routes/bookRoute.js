@@ -11,7 +11,8 @@ const {
   bookInteraction,
   getInteractions,
   getPopularBooks,
-  getTrendingBooks
+  getTrendingBooks,
+  getPopularBooksByGenre
 } = require("../controllers/bookController");
 const { isAuthenticatedUser, authorizeRoles } = require("../middleware/auth");
 const router = express.Router();
@@ -35,6 +36,7 @@ router
 
 router.route('/book-interactions').put(isAuthenticatedUser, bookInteraction).get(isAuthenticatedUser, getInteractions)
 router.route('/popular-books').get(isAuthenticatedUser, getPopularBooks)
+router.route('/popular-books/:genre').get(isAuthenticatedUser, getPopularBooksByGenre)
 router.route('/trending-books').get(isAuthenticatedUser, getTrendingBooks)
 
 module.exports = router;
