@@ -254,12 +254,12 @@ exports.getPopularBooks = catchAsyncErrors(async (req, res, next) => {
     }
   };
 
-  if (genre) {
-    matchStage.$match.$and.push({ genres: { $in: [genre] } });
-  }
+  // if (genre) {
+  //   matchStage.$match.$and.push({ genres: { $in: [genre] } });
+  // }
 
-  console.log("matchStage", genre)
-  console.log("req.header", req.header)
+  // console.log("matchStage", genre)
+  // console.log("req.header", req.header)
 
   const popular_books = await Book.aggregate([
     matchStage,
