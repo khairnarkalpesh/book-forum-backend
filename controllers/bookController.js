@@ -311,7 +311,7 @@ exports.getPopularBooks = catchAsyncErrors(async (req, res, next) => {
   }
 
   console.log("matchStage", genre)
-  console.log("req.body", req.body)
+  console.log("req.header", req.header)
 
   const popular_books = await Book.aggregate([
     matchStage,
@@ -394,6 +394,10 @@ exports.getPopularBooks = catchAsyncErrors(async (req, res, next) => {
 
 exports.getTrendingBooks = catchAsyncErrors(async (req, res, next) => {
   const { genre } = req.body;
+  
+  console.log("inside getTrendingBooks", genre)
+  console.log("inside getTrendingBooks", req.header)
+
   const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
   const matchStage = {
     $match: {
