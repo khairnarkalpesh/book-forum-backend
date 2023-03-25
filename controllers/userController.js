@@ -351,3 +351,15 @@ exports.deleteSearchRecord = catchAsyncErrors(async (req, res, next) => {
     message: "Search record deleted",
   });
 })
+
+exports.getSearchHistory = catchAsyncErrors(async (req, res, next) => {
+  const user = await User.findById(req.user.id);
+  if (!user) {
+    return res.status(404).send('User not found');
+  }
+
+  res.status(200).json({
+    success: true,
+    searchHistory: req.user.searchHistory
+  });
+})

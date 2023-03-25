@@ -17,7 +17,8 @@ const {
   addSearch,
   deleteSearchHistory,
   deleteSearchRecord,
-  verifyOTP
+  verifyOTP,
+  getSearchHistory
 } = require("../controllers/userController");
 
 router.route("/register").post(registerUser);
@@ -39,6 +40,6 @@ router.route("/me/update").put(isAuthenticatedUser, updateProfile);
 //   .put(isAuthenticatedUser, authorizeRoles("admin"), updateUserRole)
 //   .delete(isAuthenticatedUser, authorizeRoles("admin"), deleteUser);
 
-router.route("/user/search").patch(isAuthenticatedUser, addSearch).delete(isAuthenticatedUser, deleteSearchHistory);
-router.delete('/user/search/:id', isAuthenticatedUser, deleteSearchRecord)
+router.route("/user/search").get(isAuthenticatedUser, getSearchHistory).patch(isAuthenticatedUser, addSearch).delete(isAuthenticatedUser, deleteSearchHistory);
+router.route('/user/search/:id').delete(isAuthenticatedUser, deleteSearchRecord)
 module.exports = router;
