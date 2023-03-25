@@ -1,6 +1,7 @@
 const ErrorHandler = require("../utils/errorhandler");
 const catchAsyncErrors = require("../middleware/catchAsyncErrors");
 const User = require("../models/userModel");
+const { Book } = require("../models/bookModel")
 const sendToken = require("../utils/jwtToken");
 const sendMail = require("../utils/sendEmail");
 const crypto = require("crypto");
@@ -134,7 +135,7 @@ exports.forgotPassword = catchAsyncErrors(async (req, res, next) => {
 exports.verifyOTP = catchAsyncErrors(async (req, res, next) => {
   const user = await User.findOne({
     // email: req.body.email,
-    email:req.body.email,
+    email: req.body.email,
     resetPasswordOTP: req.body.otp,
     resetPasswordOTPExpires: { $gt: Date.now() },
   });
@@ -309,10 +310,12 @@ exports.addSearch = catchAsyncErrors(async (req, res, next) => {
     { new: true }
   );
 
+  const books = await Book.find().limit(20)
+
   res.status(200).json({
     success: true,
     message: "Search added",
-    searchHistory: user.searchHistory
+    books: books
   });
 
 })
