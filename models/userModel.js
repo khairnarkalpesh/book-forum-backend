@@ -37,6 +37,10 @@ const userSchema = new mongoose.Schema({
       unique: true,
       index: true, // add unique index heravatar
     },
+    createdAt: {
+      type: Date,
+      default: Date.now,
+    },
   }],
   avatar: {
     public_id: {

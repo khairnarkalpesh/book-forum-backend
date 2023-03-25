@@ -293,30 +293,50 @@ exports.updateProfile = catchAsyncErrors(async (req, res, next) => {
 
 // Add to search history
 exports.addSearch = catchAsyncErrors(async (req, res, next) => {
-  const { text } = req.body;
+  const { query } = req.body;
   // const user = await User.findById(req.user.id);
 
   // if (!user) {
   //   return next(new ErrorHandler("User not found", 404));
   // }
 
-  if (!text) {
+  if (!query) {
     return next(new ErrorHandler("Enter text", 401));
   }
 
   const user = await User.findByIdAndUpdate(
     req.user.id,
-    { $addToSet: { searchHistory: { text } } },
+    { $addToSet: { searchHistory: { text: query } } },
     { new: true }
   );
 
-  const books = await Book.find().limit(20)
+  // Search for books based on user's query
+  const books = await Book.find({
+    $or: [
+      { title: { $regex: query, $options: 'i' } },
+      { author: { $regex: query, $options: 'i' } },
+      { genres: { $in: [query] } },
+      { isbn: { $eq: query } },
+    ],
+  }).limit(10);
 
+  // Find related books based on the genres of the matching books
+  const relatedBooks = await Book.find({
+    genres: { $in: books.map(book => book.genres).flat() },
+    _id: { $nin: books.map(book => book._id) },
+  }).limit(5);
+
+
+  // const books = await Book.find().limit(20)
   res.status(200).json({
     success: true,
     message: "Search added",
-    books: books
+    seachedResultCount: books.length,
+    relatedBooksCount: relatedBooks.length,
+    seachedResult: books,
+    relatedBooks: relatedBooks
   });
+
 
 })
 
