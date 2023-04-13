@@ -445,14 +445,14 @@ exports.getTrendingBooks = catchAsyncErrors(async (req, res, next) => {
   console.log("inside getTrendingBooks", genre)
   console.log("inside getTrendingBooks", req.header)
 
-  const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+  // const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
   const matchStage = {
     $match: {
       $and: [
         { numRatings: { $ne: null } },
         { readCount: { $ne: null } },
         { likedPercent: { $ne: null } },
-        { createdAt: { $gte: weekAgo } }
+        // { createdAt: { $gte: weekAgo } }
       ]
     }
   };
