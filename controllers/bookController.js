@@ -492,3 +492,17 @@ exports.getTrendingBooks = catchAsyncErrors(async (req, res, next) => {
     trendingBooks,
   });
 })
+
+
+// Get uploaded Books
+exports.getUploadedBooks = catchAsyncErrors(async (req, res, next) => {
+  const books = await Book.find({ userId: req.user.id });
+
+  if (!books) {
+    return next(new ErrorHandler("Books not found", 200));
+  }
+
+  res.status(200).json({
+    books
+  });
+});

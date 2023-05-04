@@ -31,3 +31,17 @@ exports.addReply = catchAsyncErrors(async (req, res, next) => {
     res.json(comment);
 
 })
+
+exports.getComments = catchAsyncErrors(async (req, res, next) => {
+
+    const comments = await Comment.find({ bookId: req.params.bookId });
+    
+    if (!comments) {
+        return next(new ErrorHandler("Comments not found", 200));
+      }
+    
+    res.json(comments);
+
+
+
+})
