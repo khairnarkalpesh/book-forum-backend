@@ -502,11 +502,11 @@ exports.getTextFromPdf = catchAsyncErrors(async (req, res, next) => {
   const PDFParser = require("pdf-parse");
 
   const { pdf } = req.body;
-  console.log("pdf ", pdf);
+  console.log("url ", pdf);
 
   axios({
     method: "get",
-    url: pdf,
+    url: pdf ? pdf : "https://www.africau.edu/images/default/sample.pdf",
     responseType: "arraybuffer",
   })
     .then((response) => {
