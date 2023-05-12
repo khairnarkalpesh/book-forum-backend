@@ -13,7 +13,8 @@ const {
   getPopularBooks,
   getTrendingBooks,
   getPopularBooksByGenre,
-  getUploadedBooks
+  getUploadedBooks,
+  uploadFile
 } = require("../controllers/bookController");
 const { isAuthenticatedUser, authorizeRoles } = require("../middleware/auth");
 const router = express.Router();
@@ -22,6 +23,10 @@ router.route("/books").get(getAllBooks);
 router
   .route("/admin/book/new")
   .post(isAuthenticatedUser, createBook);
+
+  router
+  .route("/admin/book/upload")
+  .post(isAuthenticatedUser, uploadFile);
 router
   .route("/admin/book/:id")
   .put(isAuthenticatedUser, authorizeRoles("admin"), updateBook);

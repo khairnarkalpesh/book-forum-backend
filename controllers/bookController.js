@@ -2,8 +2,8 @@ const { Book, BookInteraction } = require("../models/bookModel");
 const ErrorHandler = require("../utils/errorhandler");
 const catchAsyncErrors = require("../middleware/catchAsyncErrors");
 const ApiFeatures = require("../utils/apiFeatures");
-const moment = require('moment');
-const _ = require('lodash');
+const cloudinary = require("cloudinary").v2;
+
 // Create Book -> Admin
 exports.createBook = catchAsyncErrors(async (req, res, next) => {
   req.body.user = {
@@ -12,11 +12,69 @@ exports.createBook = catchAsyncErrors(async (req, res, next) => {
     ...(req.user.avatar && { profileImage: req.user.avatar.url })
   };
 
+  console.log("req.body", req.body)
+  const filePath = req.files.pdf;
+  console.log("pdf", filePath)
+
+  const myCloud = await cloudinary.uploader.upload(filePath.tempFilePath, {
+    resource_type: 'raw',
+    folder: 'books',
+    public_id: filePath.name
+  });
+
+
+  req.body.pdfUrl = myCloud.url
+
+
+
+  // const myCloud = await cloudinary.uploader.upload(req.files.name, {
+  //   // folder: "avatars",
+  //   // width: 150,
+  //   // crop: "scale",
+  // });
+
+
   const book = await Book.create(req.body);
 
   res.status(200).json({
     success: true,
     book
+  });
+});
+
+exports.uploadFile = catchAsyncErrors(async (req, res, next) => {
+
+  console.log("req.body", req.files)
+  const filePath = req.files.pdf;
+  const imgPath = req.files.coverImage;
+  // console.log("pdf", filePath)
+  // console.log("pdf", filePath)
+
+  const myPdf = await cloudinary.uploader.upload(filePath.tempFilePath, {
+    resource_type: 'raw',
+    folder: 'books',
+    public_id: filePath.name
+  });
+
+
+  let pdfUrl = myPdf.url
+
+
+
+  const myIMG = await cloudinary.uploader.upload(imgPath.tempFilePath, {
+    resource_type: 'raw',
+    folder: "coverImages",
+    public_id: imgPath.name
+    // width: 150,
+    // crop: "scale",
+  });
+
+  let imgUrl = myIMG.url
+
+  res.status(200).json({
+    success: true,
+    imgUrl: imgUrl,
+    pdfUrl: pdfUrl
   });
 });
 

@@ -19,7 +19,10 @@ app.use(express.json());
 app.use(cors());
 app.use(cookieParser());
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(fileUpload());
+app.use(fileUpload({
+    useTempFiles:true,
+    // limits:{fileSize: }
+}));
 
 app.use("/api/v1", user);
 app.use("/api/v1", admin);
