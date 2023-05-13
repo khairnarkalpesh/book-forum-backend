@@ -2,14 +2,14 @@ const { Book, BookInteraction } = require("../models/bookModel");
 const ErrorHandler = require("../utils/errorhandler");
 const catchAsyncErrors = require("../middleware/catchAsyncErrors");
 const ApiFeatures = require("../utils/apiFeatures");
-const cloudinary = require("cloudinary").v2;
-
+const moment = require('moment');
+const _ = require('lodash');
 // Create Book -> Admin
 exports.createBook = catchAsyncErrors(async (req, res, next) => {
   req.body.user = {
     user_id: req.user.id,
     name: req.user.name,
-    ...(req.user.avatar && { profileImage: req.user.avatar.url })
+    ...(req.user.avatar && { profileImage: req.user.avatar.url }),
   };
 
   console.log("req.body", req.body)
@@ -38,7 +38,7 @@ exports.createBook = catchAsyncErrors(async (req, res, next) => {
 
   res.status(200).json({
     success: true,
-    book
+    book,
   });
 });
 
@@ -82,7 +82,7 @@ exports.uploadFile = catchAsyncErrors(async (req, res, next) => {
 exports.getAllBooks = catchAsyncErrors(async (req, res, next) => {
   const resultPerPage = 8;
   const BooksCount = await Book.countDocuments();
-  const apiFeature = new ApiFeatures(Book.find(), req.query)
+  const apiFeature = new ApiFeatures(Book.find(), req.query);
   // .search()
   // .filter()
   // .pagination();
@@ -166,9 +166,7 @@ exports.createBookReview = catchAsyncErrors(async (req, res, next) => {
 
   const book = await Book.findById(bookId);
 
-  const isReviewed = book.reviews.find(
-    (rev) => rev.user.toString() === req.user._id.toString()
-  );
+  const isReviewed = book.reviews.find((rev) => rev.user.toString() === req.user._id.toString());
   if (isReviewed) {
     book.reviews.forEach((rev) => {
       if (rev.user.toString() === req.user._id.toString()) {
@@ -219,9 +217,7 @@ exports.deleteReview = catchAsyncErrors(async (req, res, next) => {
     return next(new ErrorHandler("Book not found!", 404));
   }
 
-  const reviews = book.reviews.filter(
-    (rev) => rev._id.toString() != req.query.id
-  );
+  const reviews = book.reviews.filter((rev) => rev._id.toString() != req.query.id);
 
   // update rating
   let avg = 0;
@@ -253,12 +249,11 @@ exports.deleteReview = catchAsyncErrors(async (req, res, next) => {
   });
 });
 
-
 // Book Interaction APIs
 exports.bookInteraction = catchAsyncErrors(async (req, res) => {
   const { user_id, book_id, rating, is_read, is_reviewed, genre } = req.body;
 
-  console.log(req.body)
+  console.log(req.body);
 
   // Find the existing book interaction or create a new one
   let bookInteraction = await BookInteraction.findOne({ user_id, book_id });
@@ -270,7 +265,8 @@ exports.bookInteraction = catchAsyncErrors(async (req, res) => {
   if (is_reviewed) {
     bookInteraction.rating = rating;
     bookInteraction.is_reviewed = true;
-  } if (is_read) {
+  }
+  if (is_read) {
     bookInteraction.is_read = true;
   }
   if (rating) {
@@ -287,7 +283,6 @@ exports.bookInteraction = catchAsyncErrors(async (req, res) => {
     success: true,
     bookInteraction,
   });
-
 });
 
 // Get all interactions
@@ -297,19 +292,14 @@ exports.getInteractions = catchAsyncErrors(async (req, res, next) => {
     success: true,
     interactions,
   });
-})
+});
 
 // Get pupular
 exports.getPopularBooks = catchAsyncErrors(async (req, res, next) => {
-
   const matchStage = {
     $match: {
-      $and: [
-        { numRatings: { $ne: null } },
-        { readCount: { $ne: null } },
-        { likedPercent: { $ne: null } },
-      ]
-    }
+      $and: [{ numRatings: { $ne: null } }, { readCount: { $ne: null } }, { likedPercent: { $ne: null } }],
+    },
   };
 
   // if (genre) {
@@ -328,95 +318,90 @@ exports.getPopularBooks = catchAsyncErrors(async (req, res, next) => {
             {
               $cond: [
                 {
-                  $eq: ["$numRatings", 0]
+                  $eq: ["$numRatings", 0],
                 },
                 0,
                 {
                   $multiply: [
                     0.4,
                     {
-                      $divide: ["$numRatings", { $add: ["$numRatings", "$numOfReviews"] }]
-                    }
-                  ]
-                }
-              ]
+                      $divide: ["$numRatings", { $add: ["$numRatings", "$numOfReviews"] }],
+                    },
+                  ],
+                },
+              ],
             },
             {
-              $multiply: [0.2, "$likedPercent"]
+              $multiply: [0.2, "$likedPercent"],
             },
             {
               $cond: [
                 {
-                  $eq: ["$readCount", 0]
+                  $eq: ["$readCount", 0],
                 },
                 0,
                 {
                   $multiply: [
                     0.2,
                     {
-                      $divide: ["$readCount", { $add: ["$readCount", "$numOfReviews"] }]
-                    }
-                  ]
-                }
-              ]
+                      $divide: ["$readCount", { $add: ["$readCount", "$numOfReviews"] }],
+                    },
+                  ],
+                },
+              ],
             },
             {
               $cond: [
                 {
-                  $eq: ["$numOfReviews", 0]
+                  $eq: ["$numOfReviews", 0],
                 },
                 0,
                 {
                   $multiply: [
                     0.2,
                     {
-                      $divide: ["$numOfReviews", { $add: ["$numRatings", "$numOfReviews"] }]
-                    }
-                  ]
-                }
-              ]
-            }
-          ]
-        }
-      }
+                      $divide: ["$numOfReviews", { $add: ["$numRatings", "$numOfReviews"] }],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      },
     },
     {
-      $sort: { popularityScore: -1 }
+      $sort: { popularityScore: -1 },
     },
     {
-      $limit: 50
-    }
-  ])
+      $limit: 50,
+    },
+  ]);
 
   // console.log(popular_books)
-
 
   res.status(200).json({
     success: true,
     total: popular_books.length,
     popular_books,
   });
-})
+});
 
 exports.getPopularBooksByGenre = catchAsyncErrors(async (req, res, next) => {
   const genre = req.params.genre;
 
   const matchStage = {
     $match: {
-      $and: [
-        { numRatings: { $ne: null } },
-        { readCount: { $ne: null } },
-        { likedPercent: { $ne: null } },
-      ]
-    }
+      $and: [{ numRatings: { $ne: null } }, { readCount: { $ne: null } }, { likedPercent: { $ne: null } }],
+    },
   };
 
   if (genre) {
     matchStage.$match.$and.push({ genres: { $in: [genre] } });
   }
 
-  console.log("matchStage", genre)
-  console.log("req.header", req.header)
+  console.log("matchStage", genre);
+  console.log("req.header", req.header);
 
   const popular_books = await Book.aggregate([
     matchStage,
@@ -427,81 +412,80 @@ exports.getPopularBooksByGenre = catchAsyncErrors(async (req, res, next) => {
             {
               $cond: [
                 {
-                  $eq: ["$numRatings", 0]
+                  $eq: ["$numRatings", 0],
                 },
                 0,
                 {
                   $multiply: [
                     0.4,
                     {
-                      $divide: ["$numRatings", { $add: ["$numRatings", "$numOfReviews"] }]
-                    }
-                  ]
-                }
-              ]
+                      $divide: ["$numRatings", { $add: ["$numRatings", "$numOfReviews"] }],
+                    },
+                  ],
+                },
+              ],
             },
             {
-              $multiply: [0.2, "$likedPercent"]
+              $multiply: [0.2, "$likedPercent"],
             },
             {
               $cond: [
                 {
-                  $eq: ["$readCount", 0]
+                  $eq: ["$readCount", 0],
                 },
                 0,
                 {
                   $multiply: [
                     0.2,
                     {
-                      $divide: ["$readCount", { $add: ["$readCount", "$numOfReviews"] }]
-                    }
-                  ]
-                }
-              ]
+                      $divide: ["$readCount", { $add: ["$readCount", "$numOfReviews"] }],
+                    },
+                  ],
+                },
+              ],
             },
             {
               $cond: [
                 {
-                  $eq: ["$numOfReviews", 0]
+                  $eq: ["$numOfReviews", 0],
                 },
                 0,
                 {
                   $multiply: [
                     0.2,
                     {
-                      $divide: ["$numOfReviews", { $add: ["$numRatings", "$numOfReviews"] }]
-                    }
-                  ]
-                }
-              ]
-            }
-          ]
-        }
-      }
+                      $divide: ["$numOfReviews", { $add: ["$numRatings", "$numOfReviews"] }],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      },
     },
     {
-      $sort: { popularityScore: -1 }
+      $sort: { popularityScore: -1 },
     },
     {
-      $limit: 50
-    }
-  ])
+      $limit: 50,
+    },
+  ]);
 
   // console.log(popular_books)
-
 
   res.status(200).json({
     success: true,
     total: popular_books.length,
     popular_books,
   });
-})
+});
 
 exports.getTrendingBooks = catchAsyncErrors(async (req, res, next) => {
   const { genre } = req.body;
-  
-  console.log("inside getTrendingBooks", genre)
-  console.log("inside getTrendingBooks", req.header)
+
+  console.log("inside getTrendingBooks", genre);
+  console.log("inside getTrendingBooks", req.header);
 
   // const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
   const matchStage = {
@@ -511,8 +495,8 @@ exports.getTrendingBooks = catchAsyncErrors(async (req, res, next) => {
         { readCount: { $ne: null } },
         { likedPercent: { $ne: null } },
         // { createdAt: { $gte: weekAgo } }
-      ]
-    }
+      ],
+    },
   };
 
   if (genre) {
@@ -532,8 +516,8 @@ exports.getTrendingBooks = catchAsyncErrors(async (req, res, next) => {
           $multiply: [
             { $cond: [{ $ne: ["$rating", 0] }, { $toDouble: "$rating" }, 1] },
             { $cond: [{ $ne: ["$numOfReviews", 0] }, { $divide: ["$numOfReviews", "$readCount"] }, 1] },
-            { $cond: [{ $ne: ["$likedPercent", 0] }, { $divide: ["$likedPercent", 100] }, 1] }
-          ]
+            { $cond: [{ $ne: ["$likedPercent", 0] }, { $divide: ["$likedPercent", 100] }, 1] },
+          ],
         },
       },
     },
@@ -549,8 +533,7 @@ exports.getTrendingBooks = catchAsyncErrors(async (req, res, next) => {
     total: trendingBooks.length,
     trendingBooks,
   });
-})
-
+});
 
 // Get uploaded Books
 exports.getUploadedBooks = catchAsyncErrors(async (req, res, next) => {
@@ -561,6 +544,44 @@ exports.getUploadedBooks = catchAsyncErrors(async (req, res, next) => {
   }
 
   res.status(200).json({
-    books
+    books,
   });
+});
+
+// Get text from pdf
+exports.getTextFromPdf = catchAsyncErrors(async (req, res, next) => {
+  const PDFParser = require("pdf-parse");
+
+  const { pdf } = req.body;
+  console.log("url ", pdf);
+
+  axios({
+    method: "get",
+    url: pdf ? pdf : "https://www.africau.edu/images/default/sample.pdf",
+    responseType: "arraybuffer",
+  })
+    .then((response) => {
+      const buffer = response.data;
+
+      PDFParser(buffer)
+        .then((pdfData) => {
+          let text = pdfData.text;
+          text = text.replace(/\n/g, "");
+          res.status(200).json({
+            data: text,
+          });
+        })
+        .catch((error) => {
+          console.log(error);
+          return res.status(400).json({
+            status: "error in pdf",
+          });
+        });
+    })
+    .catch((error) => {
+      console.log(error);
+      res.status(400).json({
+        status: "error in pdf",
+      });
+    });
 });
