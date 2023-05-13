@@ -2,8 +2,7 @@ const { Book, BookInteraction } = require("../models/bookModel");
 const ErrorHandler = require("../utils/errorhandler");
 const catchAsyncErrors = require("../middleware/catchAsyncErrors");
 const ApiFeatures = require("../utils/apiFeatures");
-const moment = require('moment');
-const _ = require('lodash');
+const cloudinary = require("cloudinary").v2;
 // Create Book -> Admin
 exports.createBook = catchAsyncErrors(async (req, res, next) => {
   req.body.user = {
@@ -13,17 +12,17 @@ exports.createBook = catchAsyncErrors(async (req, res, next) => {
   };
 
   console.log("req.body", req.body)
-  const filePath = req.files.pdf;
-  console.log("pdf", filePath)
+  // const filePath = req.files.pdf;
+  // console.log("pdf", filePath)
 
-  const myCloud = await cloudinary.uploader.upload(filePath.tempFilePath, {
-    resource_type: 'raw',
-    folder: 'books',
-    public_id: filePath.name
-  });
+  // const myCloud = await cloudinary.uploader.upload(filePath.tempFilePath, {
+  //   resource_type: 'raw',
+  //   folder: 'books',
+  //   public_id: filePath.name
+  // });
 
 
-  req.body.pdfUrl = myCloud.url
+  // req.body.pdfUrl = myCloud.url
 
 
 
