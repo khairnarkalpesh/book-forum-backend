@@ -6,10 +6,12 @@ const { Comment, Reply } = require("../models/discussionModel")
 exports.addComment = catchAsyncErrors(async (req, res, next) => {
     const { bookId, content } = req.body;
     const userId = req.user.id
+    const userName = req.user.name
 
     const comment = await Comment.create({
         bookId,
         userId,
+        userName,
         content
     });
 
@@ -21,6 +23,8 @@ exports.addComment = catchAsyncErrors(async (req, res, next) => {
 exports.addReply = catchAsyncErrors(async (req, res, next) => {
     const { commentId, content } = req.body;
     req.body.userId = req.user.id
+    req.body.userName = req.user.name
+    
     const data = req.body;
 
     const comment = await Comment.findByIdAndUpdate(
