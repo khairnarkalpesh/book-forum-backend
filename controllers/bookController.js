@@ -11,7 +11,7 @@ exports.createBook = catchAsyncErrors(async (req, res, next) => {
     ...(req.user.avatar && { profileImage: req.user.avatar.url }),
   };
 
-  console.log("req.body", req.body)
+  console.log("req.body", req.body);
   // const filePath = req.files.pdf;
   // console.log("pdf", filePath)
 
@@ -21,17 +21,13 @@ exports.createBook = catchAsyncErrors(async (req, res, next) => {
   //   public_id: filePath.name
   // });
 
-
   // req.body.pdfUrl = myCloud.url
-
-
 
   // const myCloud = await cloudinary.uploader.upload(req.files.name, {
   //   // folder: "avatars",
   //   // width: 150,
   //   // crop: "scale",
   // });
-
 
   const book = await Book.create(req.body);
 
@@ -42,38 +38,34 @@ exports.createBook = catchAsyncErrors(async (req, res, next) => {
 });
 
 exports.uploadFile = catchAsyncErrors(async (req, res, next) => {
-
-  console.log("req.body", req.files)
+  console.log("req.body", req.files);
   const filePath = req.files.pdf;
   const imgPath = req.files.coverImage;
   // console.log("pdf", filePath)
   // console.log("pdf", filePath)
 
   const myPdf = await cloudinary.uploader.upload(filePath.tempFilePath, {
-    resource_type: 'raw',
-    folder: 'books',
-    public_id: filePath.name
+    resource_type: "raw",
+    folder: "books",
+    public_id: filePath.name,
   });
 
-
-  let pdfUrl = myPdf.url
-
-
+  let pdfUrl = myPdf.url;
 
   const myIMG = await cloudinary.uploader.upload(imgPath.tempFilePath, {
-    resource_type: 'raw',
+    resource_type: "raw",
     folder: "coverImages",
-    public_id: imgPath.name
+    public_id: imgPath.name,
     // width: 150,
     // crop: "scale",
   });
 
-  let imgUrl = myIMG.url
+  let imgUrl = myIMG.url;
 
   res.status(200).json({
     success: true,
     imgUrl: imgUrl,
-    pdfUrl: pdfUrl
+    pdfUrl: pdfUrl,
   });
 });
 
@@ -165,7 +157,9 @@ exports.createBookReview = catchAsyncErrors(async (req, res, next) => {
 
   const book = await Book.findById(bookId);
 
-  const isReviewed = book.reviews.find((rev) => rev.user.toString() === req.user._id.toString());
+  const isReviewed = book.reviews.find(
+    (rev) => rev.user.toString() === req.user._id.toString()
+  );
   if (isReviewed) {
     book.reviews.forEach((rev) => {
       if (rev.user.toString() === req.user._id.toString()) {
@@ -216,7 +210,9 @@ exports.deleteReview = catchAsyncErrors(async (req, res, next) => {
     return next(new ErrorHandler("Book not found!", 404));
   }
 
-  const reviews = book.reviews.filter((rev) => rev._id.toString() != req.query.id);
+  const reviews = book.reviews.filter(
+    (rev) => rev._id.toString() != req.query.id
+  );
 
   // update rating
   let avg = 0;
@@ -297,7 +293,11 @@ exports.getInteractions = catchAsyncErrors(async (req, res, next) => {
 exports.getPopularBooks = catchAsyncErrors(async (req, res, next) => {
   const matchStage = {
     $match: {
-      $and: [{ numRatings: { $ne: null } }, { readCount: { $ne: null } }, { likedPercent: { $ne: null } }],
+      $and: [
+        { numRatings: { $ne: null } },
+        { readCount: { $ne: null } },
+        { likedPercent: { $ne: null } },
+      ],
     },
   };
 
@@ -324,7 +324,10 @@ exports.getPopularBooks = catchAsyncErrors(async (req, res, next) => {
                   $multiply: [
                     0.4,
                     {
-                      $divide: ["$numRatings", { $add: ["$numRatings", "$numOfReviews"] }],
+                      $divide: [
+                        "$numRatings",
+                        { $add: ["$numRatings", "$numOfReviews"] },
+                      ],
                     },
                   ],
                 },
@@ -343,7 +346,10 @@ exports.getPopularBooks = catchAsyncErrors(async (req, res, next) => {
                   $multiply: [
                     0.2,
                     {
-                      $divide: ["$readCount", { $add: ["$readCount", "$numOfReviews"] }],
+                      $divide: [
+                        "$readCount",
+                        { $add: ["$readCount", "$numOfReviews"] },
+                      ],
                     },
                   ],
                 },
@@ -359,7 +365,10 @@ exports.getPopularBooks = catchAsyncErrors(async (req, res, next) => {
                   $multiply: [
                     0.2,
                     {
-                      $divide: ["$numOfReviews", { $add: ["$numRatings", "$numOfReviews"] }],
+                      $divide: [
+                        "$numOfReviews",
+                        { $add: ["$numRatings", "$numOfReviews"] },
+                      ],
                     },
                   ],
                 },
@@ -391,7 +400,11 @@ exports.getPopularBooksByGenre = catchAsyncErrors(async (req, res, next) => {
 
   const matchStage = {
     $match: {
-      $and: [{ numRatings: { $ne: null } }, { readCount: { $ne: null } }, { likedPercent: { $ne: null } }],
+      $and: [
+        { numRatings: { $ne: null } },
+        { readCount: { $ne: null } },
+        { likedPercent: { $ne: null } },
+      ],
     },
   };
 
@@ -418,7 +431,10 @@ exports.getPopularBooksByGenre = catchAsyncErrors(async (req, res, next) => {
                   $multiply: [
                     0.4,
                     {
-                      $divide: ["$numRatings", { $add: ["$numRatings", "$numOfReviews"] }],
+                      $divide: [
+                        "$numRatings",
+                        { $add: ["$numRatings", "$numOfReviews"] },
+                      ],
                     },
                   ],
                 },
@@ -437,7 +453,10 @@ exports.getPopularBooksByGenre = catchAsyncErrors(async (req, res, next) => {
                   $multiply: [
                     0.2,
                     {
-                      $divide: ["$readCount", { $add: ["$readCount", "$numOfReviews"] }],
+                      $divide: [
+                        "$readCount",
+                        { $add: ["$readCount", "$numOfReviews"] },
+                      ],
                     },
                   ],
                 },
@@ -453,7 +472,10 @@ exports.getPopularBooksByGenre = catchAsyncErrors(async (req, res, next) => {
                   $multiply: [
                     0.2,
                     {
-                      $divide: ["$numOfReviews", { $add: ["$numRatings", "$numOfReviews"] }],
+                      $divide: [
+                        "$numOfReviews",
+                        { $add: ["$numRatings", "$numOfReviews"] },
+                      ],
                     },
                   ],
                 },
@@ -514,8 +536,20 @@ exports.getTrendingBooks = catchAsyncErrors(async (req, res, next) => {
           //   ],
           $multiply: [
             { $cond: [{ $ne: ["$rating", 0] }, { $toDouble: "$rating" }, 1] },
-            { $cond: [{ $ne: ["$numOfReviews", 0] }, { $divide: ["$numOfReviews", "$readCount"] }, 1] },
-            { $cond: [{ $ne: ["$likedPercent", 0] }, { $divide: ["$likedPercent", 100] }, 1] },
+            {
+              $cond: [
+                { $ne: ["$numOfReviews", 0] },
+                { $divide: ["$numOfReviews", "$readCount"] },
+                1,
+              ],
+            },
+            {
+              $cond: [
+                { $ne: ["$likedPercent", 0] },
+                { $divide: ["$likedPercent", 100] },
+                1,
+              ],
+            },
           ],
         },
       },
@@ -561,8 +595,7 @@ exports.getTextFromPdf = catchAsyncErrors(async (req, res, next) => {
   })
     .then((response) => {
       const buffer = response.data;
-
-      PDFParser(buffer)
+      PDFParser(buffer, { max: 1 })
         .then((pdfData) => {
           let text = pdfData.text;
           text = text.replace(/\n/g, "");
