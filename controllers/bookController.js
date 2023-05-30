@@ -547,6 +547,77 @@ exports.getUploadedBooks = catchAsyncErrors(async (req, res, next) => {
   });
 });
 
+// Get user favourite genre Books
+exports.getFavouriteGenreBooks2 = catchAsyncErrors(async (req, res, next) => {
+  const books = await Book.find({ userId: req.user.id });
+
+  const userFavGenres = req.body.userFavGenres;
+
+  // Use content-based filtering to filter books based on matching genres
+  const matchedBooks = await Book.find({ $or: userFavGenres.map(genre => ({ genre_1: genre })) })
+    .select(['book_id', 'title', 'rating', 'numRatings', 'likedPercent']);
+
+  const genreCounts = matchedBooks.map(book => userFavGenres.filter(genre => book.genre_1 === genre).length);
+  const filteredBooks = matchedBooks.filter((_, i) => genreCounts[i] >= 2);
+
+  // Use collaborative filtering to filter out books already read and highly rated by the user
+  const userRatings = await BookInteraction.find({ Rating: { $gte: 4 } })
+    .select('book_id');
+
+  const userRatedBookIds = userRatings.map(rating => rating.book_id);
+  const collabFilteredBooks = filteredBooks.filter(book => !userRatedBookIds.includes(book.book_id));
+
+  // Calculate the weighted score for the remaining books
+  const C = matchedBooks.reduce((sum, book) => sum + book.rating, 0) / matchedBooks.length;
+  const m = matchedBooks.reduce((quantile, book) => Math.max(quantile, book.numRatings), 0.9);
+  const booksWithWeightedScore = collabFilteredBooks.map(book => ({
+    ...book._doc,
+    weighted_score: (book.numRatings / (book.numRatings + m) * book.rating) + (m / (book.numRatings + m) * C),
+  }));
+
+  // Sort the books by weighted score and return the top 10 recommendations
+  const recommendations = booksWithWeightedScore
+    .sort((a, b) => b.weighted_score - a.weighted_score)
+    .slice(0, 10);
+
+  res.status(200).json({
+    recommendations,
+  });
+});
+
+
+exports.getFavouriteGenreBooks = catchAsyncErrors(async (req, res, next) => {
+  const userFavGenres = req.body.userFavGenres;
+
+  // Use content-based filtering to filter books based on matching genres
+  const matchedBooks = await Book.find({ $or: userFavGenres.map(genre => ({ genres: genre })) })
+
+  const genreCounts = matchedBooks.map(book => userFavGenres.filter(genre => book.genres === genre).length);
+  const filteredBooks = matchedBooks.filter((_, i) => genreCounts[i] >= 2);
+
+  // Calculate the weighted score for the filtered books
+  const C = matchedBooks.reduce((sum, book) => sum + book.rating, 0) / matchedBooks.length;
+  const m = matchedBooks.reduce((quantile, book) => Math.max(quantile, book.numRatings), 0.9);
+  const booksWithWeightedScore = filteredBooks.map(book => ({
+    ...book._doc,
+    weighted_score: (book.numRatings / (book.numRatings + m) * book.rating) + (m / (book.numRatings + m) * C),
+  }));
+
+  // Sort the books by weighted score and return the top 10 recommendations
+  const recommendations = booksWithWeightedScore
+    .sort((a, b) => b.weighted_score - a.weighted_score)
+    .slice(0, 10);
+
+    let total = matchedBooks.length;
+
+  res.status(200).json({
+    total,
+    matchedBooks,
+    recommendations
+  });
+});
+
+
 // Get text from pdf
 exports.getTextFromPdf = catchAsyncErrors(async (req, res, next) => {
   const PDFParser = require("pdf-parse");
