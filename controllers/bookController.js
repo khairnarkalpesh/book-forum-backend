@@ -2,6 +2,7 @@ const { Book, BookInteraction } = require("../models/bookModel");
 const ErrorHandler = require("../utils/errorhandler");
 const catchAsyncErrors = require("../middleware/catchAsyncErrors");
 const ApiFeatures = require("../utils/apiFeatures");
+const { default: axios } = require("axios");
 const cloudinary = require("cloudinary").v2;
 // Create Book -> Admin
 exports.createBook = catchAsyncErrors(async (req, res, next) => {
@@ -157,9 +158,7 @@ exports.createBookReview = catchAsyncErrors(async (req, res, next) => {
 
   const book = await Book.findById(bookId);
 
-  const isReviewed = book.reviews.find(
-    (rev) => rev.user.toString() === req.user._id.toString()
-  );
+  const isReviewed = book.reviews.find((rev) => rev.user.toString() === req.user._id.toString());
   if (isReviewed) {
     book.reviews.forEach((rev) => {
       if (rev.user.toString() === req.user._id.toString()) {
@@ -210,9 +209,7 @@ exports.deleteReview = catchAsyncErrors(async (req, res, next) => {
     return next(new ErrorHandler("Book not found!", 404));
   }
 
-  const reviews = book.reviews.filter(
-    (rev) => rev._id.toString() != req.query.id
-  );
+  const reviews = book.reviews.filter((rev) => rev._id.toString() != req.query.id);
 
   // update rating
   let avg = 0;
@@ -293,11 +290,7 @@ exports.getInteractions = catchAsyncErrors(async (req, res, next) => {
 exports.getPopularBooks = catchAsyncErrors(async (req, res, next) => {
   const matchStage = {
     $match: {
-      $and: [
-        { numRatings: { $ne: null } },
-        { readCount: { $ne: null } },
-        { likedPercent: { $ne: null } },
-      ],
+      $and: [{ numRatings: { $ne: null } }, { readCount: { $ne: null } }, { likedPercent: { $ne: null } }],
     },
   };
 
@@ -324,10 +317,7 @@ exports.getPopularBooks = catchAsyncErrors(async (req, res, next) => {
                   $multiply: [
                     0.4,
                     {
-                      $divide: [
-                        "$numRatings",
-                        { $add: ["$numRatings", "$numOfReviews"] },
-                      ],
+                      $divide: ["$numRatings", { $add: ["$numRatings", "$numOfReviews"] }],
                     },
                   ],
                 },
@@ -346,10 +336,7 @@ exports.getPopularBooks = catchAsyncErrors(async (req, res, next) => {
                   $multiply: [
                     0.2,
                     {
-                      $divide: [
-                        "$readCount",
-                        { $add: ["$readCount", "$numOfReviews"] },
-                      ],
+                      $divide: ["$readCount", { $add: ["$readCount", "$numOfReviews"] }],
                     },
                   ],
                 },
@@ -365,10 +352,7 @@ exports.getPopularBooks = catchAsyncErrors(async (req, res, next) => {
                   $multiply: [
                     0.2,
                     {
-                      $divide: [
-                        "$numOfReviews",
-                        { $add: ["$numRatings", "$numOfReviews"] },
-                      ],
+                      $divide: ["$numOfReviews", { $add: ["$numRatings", "$numOfReviews"] }],
                     },
                   ],
                 },
@@ -400,11 +384,7 @@ exports.getPopularBooksByGenre = catchAsyncErrors(async (req, res, next) => {
 
   const matchStage = {
     $match: {
-      $and: [
-        { numRatings: { $ne: null } },
-        { readCount: { $ne: null } },
-        { likedPercent: { $ne: null } },
-      ],
+      $and: [{ numRatings: { $ne: null } }, { readCount: { $ne: null } }, { likedPercent: { $ne: null } }],
     },
   };
 
@@ -431,10 +411,7 @@ exports.getPopularBooksByGenre = catchAsyncErrors(async (req, res, next) => {
                   $multiply: [
                     0.4,
                     {
-                      $divide: [
-                        "$numRatings",
-                        { $add: ["$numRatings", "$numOfReviews"] },
-                      ],
+                      $divide: ["$numRatings", { $add: ["$numRatings", "$numOfReviews"] }],
                     },
                   ],
                 },
@@ -453,10 +430,7 @@ exports.getPopularBooksByGenre = catchAsyncErrors(async (req, res, next) => {
                   $multiply: [
                     0.2,
                     {
-                      $divide: [
-                        "$readCount",
-                        { $add: ["$readCount", "$numOfReviews"] },
-                      ],
+                      $divide: ["$readCount", { $add: ["$readCount", "$numOfReviews"] }],
                     },
                   ],
                 },
@@ -472,10 +446,7 @@ exports.getPopularBooksByGenre = catchAsyncErrors(async (req, res, next) => {
                   $multiply: [
                     0.2,
                     {
-                      $divide: [
-                        "$numOfReviews",
-                        { $add: ["$numRatings", "$numOfReviews"] },
-                      ],
+                      $divide: ["$numOfReviews", { $add: ["$numRatings", "$numOfReviews"] }],
                     },
                   ],
                 },
@@ -537,18 +508,10 @@ exports.getTrendingBooks = catchAsyncErrors(async (req, res, next) => {
           $multiply: [
             { $cond: [{ $ne: ["$rating", 0] }, { $toDouble: "$rating" }, 1] },
             {
-              $cond: [
-                { $ne: ["$numOfReviews", 0] },
-                { $divide: ["$numOfReviews", "$readCount"] },
-                1,
-              ],
+              $cond: [{ $ne: ["$numOfReviews", 0] }, { $divide: ["$numOfReviews", "$readCount"] }, 1],
             },
             {
-              $cond: [
-                { $ne: ["$likedPercent", 0] },
-                { $divide: ["$likedPercent", 100] },
-                1,
-              ],
+              $cond: [{ $ne: ["$likedPercent", 0] }, { $divide: ["$likedPercent", 100] }, 1],
             },
           ],
         },
@@ -588,87 +551,86 @@ exports.getFavouriteGenreBooks2 = catchAsyncErrors(async (req, res, next) => {
   const userFavGenres = req.body.userFavGenres;
 
   // Use content-based filtering to filter books based on matching genres
-  const matchedBooks = await Book.find({ $or: userFavGenres.map(genre => ({ genre_1: genre })) })
-    .select(['book_id', 'title', 'rating', 'numRatings', 'likedPercent']);
+  const matchedBooks = await Book.find({ $or: userFavGenres.map((genre) => ({ genre_1: genre })) }).select([
+    "book_id",
+    "title",
+    "rating",
+    "numRatings",
+    "likedPercent",
+  ]);
 
-  const genreCounts = matchedBooks.map(book => userFavGenres.filter(genre => book.genre_1 === genre).length);
+  const genreCounts = matchedBooks.map((book) => userFavGenres.filter((genre) => book.genre_1 === genre).length);
   const filteredBooks = matchedBooks.filter((_, i) => genreCounts[i] >= 2);
 
   // Use collaborative filtering to filter out books already read and highly rated by the user
-  const userRatings = await BookInteraction.find({ Rating: { $gte: 4 } })
-    .select('book_id');
+  const userRatings = await BookInteraction.find({ Rating: { $gte: 4 } }).select("book_id");
 
-  const userRatedBookIds = userRatings.map(rating => rating.book_id);
-  const collabFilteredBooks = filteredBooks.filter(book => !userRatedBookIds.includes(book.book_id));
+  const userRatedBookIds = userRatings.map((rating) => rating.book_id);
+  const collabFilteredBooks = filteredBooks.filter((book) => !userRatedBookIds.includes(book.book_id));
 
   // Calculate the weighted score for the remaining books
   const C = matchedBooks.reduce((sum, book) => sum + book.rating, 0) / matchedBooks.length;
   const m = matchedBooks.reduce((quantile, book) => Math.max(quantile, book.numRatings), 0.9);
-  const booksWithWeightedScore = collabFilteredBooks.map(book => ({
+  const booksWithWeightedScore = collabFilteredBooks.map((book) => ({
     ...book._doc,
-    weighted_score: (book.numRatings / (book.numRatings + m) * book.rating) + (m / (book.numRatings + m) * C),
+    weighted_score: (book.numRatings / (book.numRatings + m)) * book.rating + (m / (book.numRatings + m)) * C,
   }));
 
   // Sort the books by weighted score and return the top 10 recommendations
-  const recommendations = booksWithWeightedScore
-    .sort((a, b) => b.weighted_score - a.weighted_score)
-    .slice(0, 10);
+  const recommendations = booksWithWeightedScore.sort((a, b) => b.weighted_score - a.weighted_score).slice(0, 10);
 
   res.status(200).json({
     recommendations,
   });
 });
 
-
 exports.getFavouriteGenreBooks = catchAsyncErrors(async (req, res, next) => {
   const userFavGenres = req.body.userFavGenres;
 
   // Use content-based filtering to filter books based on matching genres
-  const matchedBooks = await Book.find({ $or: userFavGenres.map(genre => ({ genres: genre })) })
+  const matchedBooks = await Book.find({ $or: userFavGenres.map((genre) => ({ genres: genre })) });
 
-  const genreCounts = matchedBooks.map(book => userFavGenres.filter(genre => book.genres === genre).length);
+  const genreCounts = matchedBooks.map((book) => userFavGenres.filter((genre) => book.genres === genre).length);
   const filteredBooks = matchedBooks.filter((_, i) => genreCounts[i] >= 2);
 
   // Calculate the weighted score for the filtered books
   const C = matchedBooks.reduce((sum, book) => sum + book.rating, 0) / matchedBooks.length;
   const m = matchedBooks.reduce((quantile, book) => Math.max(quantile, book.numRatings), 0.9);
-  const booksWithWeightedScore = filteredBooks.map(book => ({
+  const booksWithWeightedScore = filteredBooks.map((book) => ({
     ...book._doc,
-    weighted_score: (book.numRatings / (book.numRatings + m) * book.rating) + (m / (book.numRatings + m) * C),
+    weighted_score: (book.numRatings / (book.numRatings + m)) * book.rating + (m / (book.numRatings + m)) * C,
   }));
 
   // Sort the books by weighted score and return the top 10 recommendations
-  const recommendations = booksWithWeightedScore
-    .sort((a, b) => b.weighted_score - a.weighted_score)
-    .slice(0, 10);
+  const recommendations = booksWithWeightedScore.sort((a, b) => b.weighted_score - a.weighted_score).slice(0, 10);
 
-    let total = matchedBooks.length;
+  let total = matchedBooks.length;
 
   res.status(200).json({
     total,
     matchedBooks,
-    recommendations
+    recommendations,
   });
 });
-
 
 // Get text from pdf
 exports.getTextFromPdf = catchAsyncErrors(async (req, res, next) => {
   const PDFParser = require("pdf-parse");
 
   const { pdf } = req.body;
-  console.log("url ", pdf);
+  console.log("url ", req.body);
 
-  axios({
+  await axios({
     method: "get",
     url: pdf ? pdf : "https://www.africau.edu/images/default/sample.pdf",
     responseType: "arraybuffer",
   })
-    .then((response) => {
+    .then(async (response) => {
       const buffer = response.data;
-      PDFParser(buffer, { max: 1 })
+      await PDFParser(buffer, { max: 1 })
         .then((pdfData) => {
           let text = pdfData.text;
+          console.log("converted text", text);
           text = text.replace(/\n/g, "");
           res.status(200).json({
             data: text,

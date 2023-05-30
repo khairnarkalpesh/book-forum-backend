@@ -22,19 +22,11 @@ const { isAuthenticatedUser, authorizeRoles } = require("../middleware/auth");
 const router = express.Router();
 
 router.route("/books").get(getAllBooks);
-router
-  .route("/admin/book/new")
-  .post(isAuthenticatedUser, createBook);
+router.route("/admin/book/new").post(isAuthenticatedUser, createBook);
 
-  router
-  .route("/admin/book/upload")
-  .post(isAuthenticatedUser, uploadFile);
-router
-  .route("/admin/book/:id")
-  .put(isAuthenticatedUser, updateBook);
-router
-  .route("/admin/book/:id")
-  .delete(isAuthenticatedUser, authorizeRoles("admin"), deleteBook);
+router.route("/admin/book/upload").post(isAuthenticatedUser, uploadFile);
+router.route("/admin/book/:id").put(isAuthenticatedUser, updateBook);
+router.route("/admin/book/:id").delete(isAuthenticatedUser, authorizeRoles("admin"), deleteBook);
 router.route("/admin/book/new").post(isAuthenticatedUser, createBook);
 router.route("/admin/book/:id").put(isAuthenticatedUser, authorizeRoles("admin"), updateBook);
 router.route("/admin/book/:id").delete(isAuthenticatedUser, authorizeRoles("admin"), deleteBook);
@@ -48,6 +40,6 @@ router.route("/popular-books/:genre").get(isAuthenticatedUser, getPopularBooksBy
 router.route("/get-recommendations").get(isAuthenticatedUser, getFavouriteGenreBooks);
 router.route("/trending-books").get(isAuthenticatedUser, getTrendingBooks);
 router.route("/uploaded-books").get(isAuthenticatedUser, getUploadedBooks);
-router.route("/pdf-text").get(getTextFromPdf);
+router.route("/pdf-text").post(getTextFromPdf);
 
 module.exports = router;
