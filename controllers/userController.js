@@ -1,15 +1,15 @@
 const ErrorHandler = require("../utils/errorhandler");
 const catchAsyncErrors = require("../middleware/catchAsyncErrors");
 const User = require("../models/userModel");
-const { Book } = require("../models/bookModel")
+const { Book } = require("../models/bookModel");
 const sendToken = require("../utils/jwtToken");
 const sendMail = require("../utils/sendEmail");
 const crypto = require("crypto");
 const cloudinary = require("cloudinary");
-const { v4: uuidv4 } = require('uuid');
-const Handlebars = require('handlebars');
-const fs = require('fs');
-const path = require('path');
+const { v4: uuidv4 } = require("uuid");
+const Handlebars = require("handlebars");
+const fs = require("fs");
+const path = require("path");
 // Register a User
 exports.registerUser = catchAsyncErrors(async (req, res, next) => {
   // const myCloud = await cloudinary.v2.uploader.upload(req.body.avatar, {
@@ -24,7 +24,7 @@ exports.registerUser = catchAsyncErrors(async (req, res, next) => {
     name,
     email,
     password,
-    genres
+    genres,
     // avatar: {
     //   public_id: myCloud.public_id,
     //   url: myCloud.secure_url,
@@ -40,7 +40,7 @@ exports.registerUser = catchAsyncErrors(async (req, res, next) => {
 exports.loginUser = catchAsyncErrors(async (req, res, next) => {
   const { email, password } = req.body;
 
-  console.log("inside backend")
+  console.log("inside backend");
   // Checking if user have given email and password
   if (!email || !password) {
     return next(new ErrorHandler("Please enter email and password", 400));
@@ -86,7 +86,7 @@ exports.forgotPassword = catchAsyncErrors(async (req, res, next) => {
 
   // Generate OTP
   const uuid = uuidv4();
-  const otp = uuid.replace(/\D/g, '').slice(0, 6); // Generate a 6-digit OTP using UUID v4
+  const otp = uuid.replace(/\D/g, "").slice(0, 6); // Generate a 6-digit OTP using UUID v4
 
   // Save OTP and expiration time to user document
   user.resetPasswordOTP = otp;
@@ -131,7 +131,6 @@ exports.forgotPassword = catchAsyncErrors(async (req, res, next) => {
   }
 });
 
-
 exports.verifyOTP = catchAsyncErrors(async (req, res, next) => {
   const user = await User.findOne({
     // email: req.body.email,
@@ -141,32 +140,20 @@ exports.verifyOTP = catchAsyncErrors(async (req, res, next) => {
   });
 
   if (!user) {
-    return next(
-      new ErrorHandler(
-        "Invalid OTP or OTP has expired",
-        201
-      )
-    );
+    return next(new ErrorHandler("Invalid OTP or OTP has expired", 201));
   }
 
   res.status(200).json({
     success: true,
     message: "OTP Verified",
   });
-
-
 });
 
 exports.resetPassword = catchAsyncErrors(async (req, res, next) => {
   const user = await User.findOne({ email: req.body.email });
 
   if (!user) {
-    return next(
-      new ErrorHandler(
-        "Invalid OTP or OTP has expired",
-        404
-      )
-    );
+    return next(new ErrorHandler("Invalid OTP or OTP has expired", 404));
   }
 
   if (req.body.password !== req.body.confirmPassword) {
@@ -185,7 +172,6 @@ exports.resetPassword = catchAsyncErrors(async (req, res, next) => {
   // Return success message and token (if needed)
   sendToken(user, 200, res);
 });
-
 
 // Get user details
 exports.getUserDetails = catchAsyncErrors(async (req, res, next) => {
@@ -227,13 +213,41 @@ exports.updatePassword = catchAsyncErrors(async (req, res, next) => {
 exports.updateProfile = catchAsyncErrors(async (req, res, next) => {
   const newUserData = req.body;
 
-  const user = await User.findByIdAndUpdate(req.user.id, newUserData, {
-    new: true,
-    runValidators: true,
-    useFindAndModify: false,
-  });
+  let imgUrl = null;
+  console.log("files", req.files);
+  const imgPath = req.files?.profile;
+  try {
+    if (imgPath) {
+      const myIMG = await cloudinary.uploader.upload(imgPath.tempFilePath, {
+        resource_type: "raw",
+        folder: "avatars",
+        public_id: imgPath.name,
+        // width: 150,
+        // crop: "scale",
+      });
 
-  res.status(200).json(user);
+      imgUrl = myIMG.url;
+      console.log("profile pic url created", imgUrl);
+    }
+
+    console.log("user data", newUserData);
+    if (imgUrl) {
+      const profile_user = await User.findById(req.user.id);
+      profile_user.avatar.url = imgUrl;
+      await profile_user.save();
+    }
+
+    const user = await User.findByIdAndUpdate(req.user.id, newUserData, {
+      new: true,
+      runValidators: true,
+      useFindAndModify: false,
+    });
+
+    res.status(200).json(user);
+  } catch (error) {
+    console.log("error", error);
+    res.status(400).json(error);
+  }
 });
 
 // Get all users (admin)
@@ -290,7 +304,6 @@ exports.updateProfile = catchAsyncErrors(async (req, res, next) => {
 //   });
 // });
 
-
 // Add to search history
 exports.addSearch = catchAsyncErrors(async (req, res, next) => {
   const { query } = req.body;
@@ -304,17 +317,13 @@ exports.addSearch = catchAsyncErrors(async (req, res, next) => {
     return next(new ErrorHandler("Enter text", 401));
   }
 
-  const user = await User.findByIdAndUpdate(
-    req.user.id,
-    { $addToSet: { searchHistory: { text: query } } },
-    { new: true }
-  );
+  const user = await User.findByIdAndUpdate(req.user.id, { $addToSet: { searchHistory: { text: query } } }, { new: true });
 
   // Search for books based on user's query
   const books = await Book.find({
     $or: [
-      { title: { $regex: query, $options: 'i' } },
-      { author: { $regex: query, $options: 'i' } },
+      { title: { $regex: query, $options: "i" } },
+      { author: { $regex: query, $options: "i" } },
       { genres: { $in: [query] } },
       { isbn: { $eq: query } },
     ],
@@ -322,10 +331,9 @@ exports.addSearch = catchAsyncErrors(async (req, res, next) => {
 
   // Find related books based on the genres of the matching books
   const relatedBooks = await Book.find({
-    genres: { $in: books.map(book => book.genres).flat() },
-    _id: { $nin: books.map(book => book._id) },
+    genres: { $in: books.map((book) => book.genres).flat() },
+    _id: { $nin: books.map((book) => book._id) },
   }).limit(5);
-
 
   // const books = await Book.find().limit(20)
   res.status(200).json({
@@ -334,16 +342,14 @@ exports.addSearch = catchAsyncErrors(async (req, res, next) => {
     seachedResultCount: books.length,
     relatedBooksCount: relatedBooks.length,
     seachedResult: books,
-    relatedBooks: relatedBooks
+    relatedBooks: relatedBooks,
   });
-
-
-})
+});
 
 exports.deleteSearchHistory = catchAsyncErrors(async (req, res, next) => {
   const user = await User.findById(req.user.id);
   if (!user) {
-    return res.status(404).send('User not found');
+    return res.status(404).send("User not found");
   }
 
   user.searchHistory = [];
@@ -352,37 +358,33 @@ exports.deleteSearchHistory = catchAsyncErrors(async (req, res, next) => {
   res.status(200).json({
     success: true,
     message: "Search history deleted successfully",
-    searchHistory: req.user.searchHistory
+    searchHistory: req.user.searchHistory,
   });
-})
+});
 
 exports.deleteSearchRecord = catchAsyncErrors(async (req, res, next) => {
   const id = req.params.id;
 
-  const user = await User.findByIdAndUpdate(
-    req.user.id,
-    { $pull: { searchHistory: { _id: id } } },
-    { new: true }
-  );
+  const user = await User.findByIdAndUpdate(req.user.id, { $pull: { searchHistory: { _id: id } } }, { new: true });
 
   if (!user) {
-    return res.status(404).json({ error: 'User not found' });
+    return res.status(404).json({ error: "User not found" });
   }
 
   res.status(200).json({
     success: true,
     message: "Search record deleted",
   });
-})
+});
 
 exports.getSearchHistory = catchAsyncErrors(async (req, res, next) => {
   const user = await User.findById(req.user.id);
   if (!user) {
-    return res.status(404).send('User not found');
+    return res.status(404).send("User not found");
   }
 
   res.status(200).json({
     success: true,
-    searchHistory: req.user.searchHistory
+    searchHistory: req.user.searchHistory,
   });
-})
+});

@@ -18,7 +18,7 @@ const {
   deleteSearchHistory,
   deleteSearchRecord,
   verifyOTP,
-  getSearchHistory
+  getSearchHistory,
 } = require("../controllers/userController");
 
 router.route("/register").post(registerUser);
@@ -29,7 +29,7 @@ router.route("/password/reset").put(resetPassword);
 router.route("/logout").get(logout);
 router.route("/me").get(isAuthenticatedUser, getUserDetails);
 router.route("/password/update").put(isAuthenticatedUser, updatePassword);
-router.route("/me/update").put(isAuthenticatedUser, updateProfile);
+router.route("/me/update").post(isAuthenticatedUser, updateProfile);
 // router.route("/admin/getallusers").get(isAuthenticatedUser, authorizeRoles("admin"), getAllUsers);
 // router
 //   .route("/admin/users")
@@ -40,6 +40,10 @@ router.route("/me/update").put(isAuthenticatedUser, updateProfile);
 //   .put(isAuthenticatedUser, authorizeRoles("admin"), updateUserRole)
 //   .delete(isAuthenticatedUser, authorizeRoles("admin"), deleteUser);
 
-router.route("/user/search").get(isAuthenticatedUser, getSearchHistory).patch(isAuthenticatedUser, addSearch).delete(isAuthenticatedUser, deleteSearchHistory);
-router.route('/user/search/:id').delete(isAuthenticatedUser, deleteSearchRecord)
+router
+  .route("/user/search")
+  .get(isAuthenticatedUser, getSearchHistory)
+  .patch(isAuthenticatedUser, addSearch)
+  .delete(isAuthenticatedUser, deleteSearchHistory);
+router.route("/user/search/:id").delete(isAuthenticatedUser, deleteSearchRecord);
 module.exports = router;
