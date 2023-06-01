@@ -38,7 +38,7 @@ exports.removeBook = catchAsyncErrors(async (req, res, next) => {
     const userId = req.user.id;
 
     const wishlist = await Wishlist.findOneAndUpdate(
-        { user: userId },
+        { userId },
         { $pull: { books: { _id: id } } },
         { new: true }
     );

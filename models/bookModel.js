@@ -192,6 +192,10 @@ const bookSchema = new mongoose.Schema({
       required: false,
     }
   },
+  status:{
+    type: String,
+    default:"Approved"
+  },
   createdAt: {
     type: Date,
     default: Date.now,

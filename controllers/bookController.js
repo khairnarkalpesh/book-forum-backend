@@ -116,6 +116,28 @@ exports.updateBook = catchAsyncErrors(async (req, res, next) => {
   });
 });
 
+// Update Book status
+exports.approveBook = catchAsyncErrors(async (req, res, next) => {
+  let book = await Book.findById(req.params.id);
+
+  if (!book) {
+    return next(new ErrorHandler("Book not found", 404));
+  }
+
+  book = await Book.findByIdAndUpdate(req.params.id, {
+    status: "Approved"
+  }, {
+    new: true,
+    runValidators: true,
+    useFindAndModify: false,
+  });
+
+  res.status(200).json({
+    success: true,
+    book,
+  });
+});
+
 // Delete Book
 exports.deleteBook = catchAsyncErrors(async (req, res, next) => {
   const book = await Book.findById(req.params.id);

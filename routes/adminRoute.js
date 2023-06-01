@@ -35,21 +35,22 @@ router.route("/admin/me/update").put(isAuthenticatedAdmin, updateProfile);
 // router.route("/admin/getallAdmins").get(isAuthenticatedAdmin, authorizeRoles("admin"), getAllAdmins);
 router
   .route("/admins/")
-  .get(isAuthenticatedAdmin, authorizeRoles("admin"), getAllAdmins);
+  .get(getAllAdmins);
 router
   .route("/admin/:id")
   .get(isAuthenticatedAdmin, authorizeRoles("admin"), getSingleAdmin)
   .put(isAuthenticatedAdmin, authorizeRoles("admin"), updateAdminRole)
+  .delete(deleteAdmin)
 
 router
   .route("/getAllUsers/")
-  .get(isAuthenticatedAdmin, authorizeRoles("admin"), getAllUsers);
+  .get(getAllUsers);
 
 router
   .route("/admin/user/:id")
   .get(isAuthenticatedAdmin, authorizeRoles("admin"), getSingleUser)
   .put(isAuthenticatedAdmin, authorizeRoles("admin"), updateUserRole)
-  .delete(isAuthenticatedAdmin, authorizeRoles("admin"), deleteUser);
+  .delete(deleteUser);
 
 // .delete(isAuthenticatedAdmin, authorizeRoles("admin"), deleteAdmin);
 

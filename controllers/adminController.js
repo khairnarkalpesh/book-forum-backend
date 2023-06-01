@@ -254,7 +254,7 @@ exports.updateAdminRole = catchAsyncErrors(async (req, res, next) => {
 });
 
 // Delete admin -> Admin
-exports.deleteadmin = catchAsyncErrors(async (req, res, next) => {
+exports.deleteAdmin = catchAsyncErrors(async (req, res, next) => {
   const admin = await Admin.findById(req.params.id);
 
   if (!admin) {
